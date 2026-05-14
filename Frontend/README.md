@@ -1,4 +1,4 @@
-# SkillForge - Industry-Oriented Guided Freelancing Platform
+# SkillForge - Industry-Oriented Guided Freelancing Platform (demo)
 
 A modern, enterprise-level EdTech platform that connects students, mentors, faculty, and clients for guided skill development and real-world freelancing experience.
 
