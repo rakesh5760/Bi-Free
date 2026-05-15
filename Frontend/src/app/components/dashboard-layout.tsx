@@ -4,6 +4,9 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { ThemeToggle } from "./theme-toggle";
+import { motion } from "motion/react";
+import { useAuthStore } from "../../store/useAuthStore";
+import { useNavigate } from "react-router";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +23,14 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children, sidebar, title }: DashboardLayoutProps) {
+  const { logout, user } = useAuthStore();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="flex h-screen overflow-hidden">
@@ -66,17 +77,25 @@ export function DashboardLayout({ children, sidebar, title }: DashboardLayoutPro
                   <DropdownMenuItem>Settings</DropdownMenuItem>
                   <DropdownMenuItem>Support</DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>Log out</DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer">
+                    Log out
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
           </header>
 
-          <main className="flex-1 overflow-auto p-6">
-            <div className="mb-6">
-              <h1 className="text-3xl font-bold">{title}</h1>
-            </div>
-            {children}
+          <main className="flex-1 overflow-auto p-6 bg-muted/10">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="mb-6">
+                <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
+              </div>
+              {children}
+            </motion.div>
           </main>
         </div>
       </div>

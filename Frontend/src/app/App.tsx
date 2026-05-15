@@ -1,15 +1,17 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router";
 import { ThemeProvider } from "./components/theme-provider";
 import { Toaster } from "./components/ui/sonner";
+import { ProtectedRoute } from "../features/auth/components/ProtectedRoute";
 
 import LandingPage from "./pages/landing";
-import StudentDashboard from "./pages/student-dashboard";
-import MentorDashboard from "./pages/mentor-dashboard";
-import FacultyDashboard from "./pages/faculty-dashboard";
-import ClientDashboard from "./pages/client-dashboard";
+import LoginPage from "../features/auth/pages/login";
+import StudentDashboard from "../features/student-dashboard/StudentDashboard";
+import MentorDashboard from "../features/mentor/MentorDashboard";
+import FacultyDashboard from "../features/faculty/FacultyDashboard";
+import ClientDashboard from "../features/client/ClientDashboard";
 import ExamInterface from "./pages/exam-interface";
-import LearningPortal from "./pages/learning-portal";
-import ProjectManagement from "./pages/project-management";
+import LearningPortal from "../features/learning/LearningPortal";
+import ProjectManagement from "../features/projects/ProjectManagement";
 import AnalyticsDashboard from "./pages/analytics-dashboard";
 import AdminPanel from "./pages/admin-panel";
 
@@ -19,15 +21,19 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/student" element={<StudentDashboard />} />
-          <Route path="/mentor" element={<MentorDashboard />} />
-          <Route path="/faculty" element={<FacultyDashboard />} />
-          <Route path="/client" element={<ClientDashboard />} />
-          <Route path="/exam" element={<ExamInterface />} />
-          <Route path="/learning" element={<LearningPortal />} />
-          <Route path="/projects" element={<ProjectManagement />} />
-          <Route path="/analytics" element={<AnalyticsDashboard />} />
-          <Route path="/admin" element={<AdminPanel />} />
+          <Route path="/login" element={<LoginPage />} />
+          
+          <Route path="/student" element={<ProtectedRoute allowedRoles={['student']}><StudentDashboard /></ProtectedRoute>} />
+          <Route path="/mentor" element={<ProtectedRoute allowedRoles={['mentor']}><MentorDashboard /></ProtectedRoute>} />
+          <Route path="/faculty" element={<ProtectedRoute allowedRoles={['faculty']}><FacultyDashboard /></ProtectedRoute>} />
+          <Route path="/client" element={<ProtectedRoute allowedRoles={['client']}><ClientDashboard /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminPanel /></ProtectedRoute>} />
+          
+          <Route path="/exam" element={<ProtectedRoute allowedRoles={['student']}><ExamInterface /></ProtectedRoute>} />
+          <Route path="/learning" element={<ProtectedRoute allowedRoles={['student']}><LearningPortal /></ProtectedRoute>} />
+          <Route path="/projects" element={<ProtectedRoute><ProjectManagement /></ProtectedRoute>} />
+          <Route path="/analytics" element={<ProtectedRoute><AnalyticsDashboard /></ProtectedRoute>} />
+          
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

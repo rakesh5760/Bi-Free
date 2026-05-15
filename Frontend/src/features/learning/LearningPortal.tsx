@@ -1,11 +1,12 @@
 import { BookOpen, Code, Database, Globe, Trophy, Star, Clock, Play, CheckCircle, Lock, Home, FileText, Settings } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import { Badge } from "../components/ui/badge";
-import { Button } from "../components/ui/button";
-import { Progress } from "../components/ui/progress";
-import { DashboardLayout } from "../components/dashboard-layout";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../app/components/ui/card";
+import { Badge } from "../../app/components/ui/badge";
+import { Button } from "../../app/components/ui/button";
+import { Progress } from "../../app/components/ui/progress";
+import { DashboardLayout } from "../../app/components/dashboard-layout";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../app/components/ui/tabs";
+import { useAuthStore } from "../../store/useAuthStore";
+import { AlertTriangle } from "lucide-react";
 function Sidebar() {
   const menuItems = [
     { icon: Home, label: "Dashboard" },
@@ -41,6 +42,9 @@ function Sidebar() {
 }
 
 export default function LearningPortal() {
+  const { user } = useAuthStore();
+  const level = user?.studentLevel || 'D';
+
   const learningPaths = [
     {
       title: "Full Stack Web Development",
@@ -88,6 +92,32 @@ export default function LearningPortal() {
   return (
     <DashboardLayout sidebar={<Sidebar />} title="Learning Portal">
       <div className="space-y-6">
+        
+        {/* Dynamic Level Warning Banner */}
+        {level !== 'A' && (
+          <Card className="bg-amber-500/10 border-amber-500/20 shadow-none">
+            <CardContent className="p-4 flex items-start gap-4">
+              <div className="h-10 w-10 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0 mt-1">
+                <AlertTriangle className="h-5 w-5 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-amber-800 dark:text-amber-500 text-lg">You are currently Level {level}</h3>
+                <p className="text-amber-700/80 dark:text-amber-400/80 text-sm mt-1">
+                  You must reach <strong>Level A</strong> to be eligible for real-world client projects. Complete the recommended learning paths below and pass the qualification exams to level up.
+                </p>
+                <div className="mt-3 flex gap-3">
+                  <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white">
+                    Take Qualification Exam
+                  </Button>
+                  <Button size="sm" variant="outline" className="border-amber-500/50 text-amber-700 dark:text-amber-400">
+                    View Requirements
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid gap-6 md:grid-cols-3">
           <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
             <CardContent className="p-6">

@@ -1,10 +1,10 @@
 import { Users, UserCheck, FileText, BarChart3, Home, Settings, Shield, CheckCircle, AlertTriangle, Filter } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import { Badge } from "../components/ui/badge";
-import { Button } from "../components/ui/button";
-import { Avatar, AvatarFallback } from "../components/ui/avatar";
-import { DashboardLayout } from "../components/dashboard-layout";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../app/components/ui/card";
+import { Badge } from "../../app/components/ui/badge";
+import { Button } from "../../app/components/ui/button";
+import { Avatar, AvatarFallback } from "../../app/components/ui/avatar";
+import { DashboardLayout } from "../../app/components/dashboard-layout";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../app/components/ui/select";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 const studentGrowthData = [

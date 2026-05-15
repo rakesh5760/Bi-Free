@@ -1,11 +1,11 @@
 import { Users, Calendar, FileText, TrendingUp, Home, Settings, MessageSquare, Award, CheckCircle, Clock, AlertCircle } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import { Badge } from "../components/ui/badge";
-import { Button } from "../components/ui/button";
-import { Progress } from "../components/ui/progress";
-import { Avatar, AvatarFallback } from "../components/ui/avatar";
-import { DashboardLayout } from "../components/dashboard-layout";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../app/components/ui/card";
+import { Badge } from "../../app/components/ui/badge";
+import { Button } from "../../app/components/ui/button";
+import { Progress } from "../../app/components/ui/progress";
+import { Avatar, AvatarFallback } from "../../app/components/ui/avatar";
+import { DashboardLayout } from "../../app/components/dashboard-layout";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../app/components/ui/tabs";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 const performanceData = [

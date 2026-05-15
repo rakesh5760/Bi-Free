@@ -1,10 +1,10 @@
 import { BookOpen, Code, Layout, FileText, Users, Settings, Home, Trophy, TrendingUp, Clock, CheckCircle, AlertCircle, Github, ExternalLink } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import { Badge } from "../components/ui/badge";
-import { Button } from "../components/ui/button";
-import { Progress } from "../components/ui/progress";
-import { Avatar, AvatarFallback } from "../components/ui/avatar";
-import { DashboardLayout } from "../components/dashboard-layout";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../app/components/ui/card";
+import { Badge } from "../../app/components/ui/badge";
+import { Button } from "../../app/components/ui/button";
+import { Progress } from "../../app/components/ui/progress";
+import { Avatar, AvatarFallback } from "../../app/components/ui/avatar";
+import { DashboardLayout } from "../../app/components/dashboard-layout";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 const skillProgressData = [
