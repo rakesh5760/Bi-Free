@@ -1,34 +1,19 @@
-import { Users, UserCheck, FileText, BarChart3, Home, Settings, Shield, CheckCircle, AlertTriangle, Filter } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../app/components/ui/card";
-import { Badge } from "../../app/components/ui/badge";
-import { Button } from "../../app/components/ui/button";
-import { Avatar, AvatarFallback } from "../../app/components/ui/avatar";
-import { DashboardLayout } from "../../app/components/dashboard-layout";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../app/components/ui/select";
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-
-const studentGrowthData = [
-  { month: "Jan", students: 120 },
-  { month: "Feb", students: 145 },
-  { month: "Mar", students: 168 },
-  { month: "Apr", students: 192 },
-  { month: "May", students: 215 },
-];
-
-const performanceData = [
-  { category: "Level A", count: 45 },
-  { category: "Level B", count: 78 },
-  { category: "Level C", count: 62 },
-  { category: "Level D", count: 30 },
-];
+import { Users, UserCheck, FileText, Home, Settings, Shield, CheckCircle, AlertTriangle, Filter, Plus, Briefcase, ArrowRight, UserPlus, Clock } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "../../components/ui/card";
+import { Badge } from "../../components/ui/badge";
+import { Button } from "../../components/ui/button";
+import { Avatar, AvatarFallback } from "../../components/ui/avatar";
+import { DashboardLayout } from "../../layouts/DashboardLayout";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 
 function Sidebar() {
   const menuItems = [
     { icon: Home, label: "Dashboard", active: true },
     { icon: Users, label: "Students" },
     { icon: UserCheck, label: "Mentors" },
-    { icon: FileText, label: "Projects" },
-    { icon: BarChart3, label: "Analytics" },
+    { icon: FileText, label: "Project Allocations" },
+    { icon: AlertTriangle, label: "Escalations" },
     { icon: Shield, label: "Approvals" },
     { icon: Settings, label: "Settings" },
   ];
@@ -108,42 +93,195 @@ export default function FacultyDashboard() {
           </Card>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Student Growth Trend</CardTitle>
-              <CardDescription>Monthly enrollment statistics</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={studentGrowthData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="month" className="text-xs" />
-                  <YAxis className="text-xs" />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="students" stroke="#3b82f6" strokeWidth={2} />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+        {/* OPERATIONAL WORKFLOW AREA */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          
+          {/* Main Action Queue */}
+          <div className="lg:col-span-2 space-y-6">
+            <Card className="border-primary/20 shadow-lg">
+              <CardHeader className="bg-primary/5 border-b border-primary/10">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2 text-primary">
+                      <Briefcase className="h-5 w-5" />
+                      Pending Project Allocations
+                    </CardTitle>
+                    <CardDescription>Client projects awaiting Mentor and Team assignment</CardDescription>
+                  </div>
+                  <Badge className="bg-primary hover:bg-primary">2 Action Required</Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="divide-y">
+                  {[
+                    { client: "TechStart Corp", project: "E-commerce Backend Refactor", requiredSkills: ["Node.js", "PostgreSQL"], budget: "$4,500", submitted: "2 hours ago" },
+                    { client: "DesignHub Inc", project: "Dashboard UI Migration", requiredSkills: ["React", "Tailwind"], budget: "$3,200", submitted: "5 hours ago" },
+                  ].map((project, i) => (
+                    <div key={i} className="p-6 hover:bg-muted/30 transition-colors">
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge variant="outline" className="text-xs font-normal">{project.client}</Badge>
+                            <span className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" /> {project.submitted}</span>
+                          </div>
+                          <h3 className="text-lg font-semibold">{project.project}</h3>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-semibold text-green-600 dark:text-green-400">{project.budget}</div>
+                        </div>
+                      </div>
+                      
+                      <div className="mb-4">
+                        <span className="text-xs text-muted-foreground mr-2">Required Skills:</span>
+                        <div className="inline-flex gap-1">
+                          {project.requiredSkills.map(skill => (
+                            <Badge key={skill} variant="secondary" className="text-[10px] h-5">{skill}</Badge>
+                          ))}
+                        </div>
+                      </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Skill Level Distribution</CardTitle>
-              <CardDescription>Student distribution across skill levels</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={performanceData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="category" className="text-xs" />
-                  <YAxis className="text-xs" />
-                  <Tooltip />
-                  <Bar dataKey="count" fill="#8b5cf6" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+                      <div className="bg-card border rounded-lg p-4 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm font-medium flex items-center gap-2">
+                            <UserCheck className="h-4 w-4 text-muted-foreground" /> Step 1: Assign Supervising Mentor
+                          </div>
+                          <Select defaultValue="unassigned">
+                            <SelectTrigger className="w-[200px] h-8 text-xs">
+                              <SelectValue placeholder="Select Mentor" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="unassigned" disabled>Select Mentor...</SelectItem>
+                              <SelectItem value="m1">Sarah Kumar (Backend Expert)</SelectItem>
+                              <SelectItem value="m2">Rajesh Mehta (Fullstack)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm font-medium flex items-center gap-2">
+                            <Users className="h-4 w-4 text-muted-foreground" /> Step 2: Select Level A Students
+                          </div>
+                          <Button size="sm" variant="outline" className="h-8 text-xs">
+                            <UserPlus className="h-3 w-3 mr-2" /> Browse Eligible Students
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 flex justify-end">
+                        <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md">
+                          Finalize Allocation & Launch Project <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Active Supervised Projects</CardTitle>
+                <CardDescription>Monitor ongoing mentor-led client engagements</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="active">
+                  <TabsList className="mb-4">
+                    <TabsTrigger value="active">Active Execution (12)</TabsTrigger>
+                    <TabsTrigger value="review">Final Review (3)</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="active" className="space-y-4">
+                    {[
+                      { project: "Mobile App Wireframes", mentor: "Sarah Kumar", students: 2, progress: 65, status: "On Track" },
+                      { project: "Database Optimization", mentor: "Arjun Nair", students: 3, progress: 30, status: "At Risk" },
+                    ].map((active, i) => (
+                      <div key={i} className="flex items-center justify-between p-4 border rounded-lg bg-card hover:shadow-sm transition-all">
+                        <div className="flex-1">
+                          <div className="font-medium">{active.project}</div>
+                          <div className="text-sm text-muted-foreground flex items-center gap-3 mt-1">
+                            <span className="flex items-center gap-1"><UserCheck className="h-3 w-3" /> {active.mentor}</span>
+                            <span className="flex items-center gap-1"><Users className="h-3 w-3" /> {active.students} Students</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <Badge variant={active.status === "On Track" ? "default" : "destructive"} className={active.status === "On Track" ? "bg-green-500 hover:bg-green-600" : ""}>
+                            {active.status}
+                          </Badge>
+                          <Button size="sm" variant="ghost">Manage</Button>
+                        </div>
+                      </div>
+                    ))}
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Column: Escalations & Quick Filters */}
+          <div className="space-y-6">
+            <Card className="border-destructive/30 shadow-md">
+              <CardHeader className="bg-destructive/5 border-b border-destructive/10 pb-4">
+                <CardTitle className="text-destructive flex items-center gap-2 text-lg">
+                  <AlertTriangle className="h-5 w-5" />
+                  Escalations
+                </CardTitle>
+                <CardDescription>Requires immediate faculty intervention</CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="divide-y">
+                  {[
+                    { type: "Mentor Alert", issue: "Student Sneha missing milestones", project: "DB Opt" },
+                    { type: "Client Dispute", issue: "Scope change requested", project: "App Wireframes" },
+                  ].map((alert, i) => (
+                    <div key={i} className="p-4 hover:bg-muted/50 transition-colors">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge variant="destructive" className="text-[10px] uppercase tracking-wider">{alert.type}</Badge>
+                      </div>
+                      <div className="text-sm font-medium mt-1">{alert.issue}</div>
+                      <div className="text-xs text-muted-foreground mt-1">Project: {alert.project}</div>
+                      <Button size="sm" variant="outline" className="w-full mt-3 h-7 text-xs border-destructive/30 text-destructive hover:bg-destructive hover:text-white">
+                        Review & Resolve
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Student Roster Query</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground">Filter by Qualification Level</label>
+                  <Select defaultValue="a">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="a">Level A (Project Ready)</SelectItem>
+                      <SelectItem value="b">Level B (Incubating)</SelectItem>
+                      <SelectItem value="c">Level C (Incubating)</SelectItem>
+                      <SelectItem value="d">Level D (Novice)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground">Filter by Trust Score</label>
+                  <Select defaultValue="high">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Professionalism Score" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="high">High Professionalism (&gt;90)</SelectItem>
+                      <SelectItem value="med">Average (70-90)</SelectItem>
+                      <SelectItem value="low">At Risk (&lt;70)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button className="w-full mt-2">Filter Students</Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         <Card>
@@ -227,68 +365,6 @@ export default function FacultyDashboard() {
             </div>
           </CardContent>
         </Card>
-
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Pending Approvals</CardTitle>
-              <CardDescription>Projects and requests requiring approval</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {[
-                { type: "Project", title: "E-commerce Platform Development", student: "Priya Sharma", submitted: "2 hours ago" },
-                { type: "Mentor", title: "New Mentor Application", student: "Rakesh Sharma", submitted: "5 hours ago" },
-                { type: "Project", title: "Mobile App Redesign", student: "Vikram Reddy", submitted: "1 day ago" },
-              ].map((item, i) => (
-                <div key={i} className="p-4 border rounded-lg bg-muted/30">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="outline" className="text-xs">{item.type}</Badge>
-                      </div>
-                      <div className="font-medium text-sm">{item.title}</div>
-                      <div className="text-xs text-muted-foreground">{item.student}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between mt-3">
-                    <div className="text-xs text-muted-foreground">Submitted {item.submitted}</div>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline">Reject</Button>
-                      <Button size="sm">Approve</Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Performance Alerts</CardTitle>
-              <CardDescription>Students requiring attention</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {[
-                { student: "Sneha Desai", issue: "No project submissions in 2 weeks", severity: "high" },
-                { student: "Karan Patel", issue: "Low exam scores (below 60%)", severity: "high" },
-                { student: "Maya Iyer", issue: "Mentor reported minimal engagement", severity: "medium" },
-              ].map((alert, i) => (
-                <div key={i} className="p-4 border rounded-lg bg-destructive/5 border-destructive/20">
-                  <div className="flex items-start gap-3">
-                    <AlertTriangle className={`h-5 w-5 flex-shrink-0 mt-0.5 ${alert.severity === 'high' ? 'text-destructive' : 'text-yellow-500'}`} />
-                    <div className="flex-1">
-                      <div className="font-medium text-sm">{alert.student}</div>
-                      <div className="text-sm text-muted-foreground">{alert.issue}</div>
-                      <Button size="sm" variant="outline" className="mt-2">
-                        Take Action
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </DashboardLayout>
   );

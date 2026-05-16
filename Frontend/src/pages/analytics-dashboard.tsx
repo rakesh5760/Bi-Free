@@ -2,7 +2,7 @@ import { TrendingUp, Users, Briefcase, GraduationCap, Target, Award, BarChart3, 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
-import { DashboardLayout } from "../components/dashboard-layout";
+import { DashboardLayout } from "../layouts/DashboardLayout";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
 

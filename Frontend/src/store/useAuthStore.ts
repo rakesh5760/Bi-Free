@@ -4,6 +4,13 @@ import { persist } from 'zustand/middleware';
 export type UserRole = 'student' | 'mentor' | 'faculty' | 'client' | 'admin';
 export type StudentLevel = 'A' | 'B' | 'C' | 'D' | null;
 
+export interface ReputationMetrics {
+  professionalismScore: number;
+  reliabilityScore: number;
+  examIntegrityScore: number;
+  collaborationRating: number;
+}
+
 interface User {
   id: string;
   name: string;
@@ -11,6 +18,7 @@ interface User {
   role: UserRole;
   avatarUrl?: string;
   studentLevel?: StudentLevel; // Only for students
+  reputation?: ReputationMetrics; // Faculty and Mentors can view this
 }
 
 interface AuthState {

@@ -1,11 +1,11 @@
 import { Briefcase, Plus, MessageSquare, FileCheck, Clock, Home, Settings, DollarSign, Users, CheckCircle } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../app/components/ui/card";
-import { Badge } from "../../app/components/ui/badge";
-import { Button } from "../../app/components/ui/button";
-import { Progress } from "../../app/components/ui/progress";
-import { Avatar, AvatarFallback } from "../../app/components/ui/avatar";
-import { DashboardLayout } from "../../app/components/dashboard-layout";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../app/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
+import { Badge } from "../../components/ui/badge";
+import { Button } from "../../components/ui/button";
+import { Progress } from "../../components/ui/progress";
+import { Avatar, AvatarFallback } from "../../components/ui/avatar";
+import { DashboardLayout } from "../../layouts/DashboardLayout";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 
 function Sidebar() {
   const menuItems = [
@@ -99,39 +99,43 @@ export default function ClientDashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Active Projects</CardTitle>
-            <CardDescription>Track your ongoing project deliverables</CardDescription>
+            <CardTitle>Active Supervised Projects</CardTitle>
+            <CardDescription>Track deliverables for your mentor-supervised teams</CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="all">
               <TabsList>
                 <TabsTrigger value="all">All Projects</TabsTrigger>
-                <TabsTrigger value="progress">In Progress</TabsTrigger>
-                <TabsTrigger value="review">In Review</TabsTrigger>
+                <TabsTrigger value="progress">In Execution</TabsTrigger>
+                <TabsTrigger value="review">Mentor QA</TabsTrigger>
               </TabsList>
               <TabsContent value="all" className="space-y-4 mt-4">
                 {[
-                  { title: "E-commerce Website Development", team: "Team Alpha", members: 3, progress: 75, status: "In Progress", deadline: "May 18, 2026", budget: "$3,500" },
-                  { title: "Mobile App UI/UX Design", team: "Team Beta", members: 2, progress: 45, status: "In Progress", deadline: "May 25, 2026", budget: "$2,800" },
-                  { title: "Database Migration & Optimization", team: "Team Gamma", members: 4, progress: 90, status: "In Review", deadline: "May 15, 2026", budget: "$4,200" },
+                  { title: "E-commerce Website Development", team: "Team Alpha", mentor: "Sarah Kumar", members: 3, progress: 75, status: "In Execution", deadline: "May 18, 2026", budget: "$3,500" },
+                  { title: "Mobile App UI/UX Design", team: "Team Beta", mentor: "Vikram Mehta", members: 2, progress: 45, status: "In Execution", deadline: "May 25, 2026", budget: "$2,800" },
+                  { title: "Database Migration & Optimization", team: "Team Gamma", mentor: "Priya Sharma", members: 4, progress: 90, status: "Mentor QA", deadline: "May 15, 2026", budget: "$4,200" },
                 ].map((project, i) => (
                   <div key={i} className="p-6 border rounded-lg hover:shadow-lg transition-all bg-card/50">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
+                        <div className="flex gap-2 mb-2">
+                           <Badge variant="outline" className="bg-primary/5 text-primary text-[10px] uppercase tracking-wider border-primary/20">Faculty Allocated</Badge>
+                           <Badge variant="outline" className="bg-blue-500/5 text-blue-600 dark:text-blue-400 text-[10px] uppercase tracking-wider border-blue-500/20 flex items-center gap-1">
+                             <CheckCircle className="h-3 w-3" /> Mentor Supervised
+                           </Badge>
+                        </div>
                         <h3 className="font-semibold text-lg mb-1">{project.title}</h3>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Users className="h-4 w-4" />
-                            {project.team}
+                          <span className="flex items-center gap-1 font-medium text-foreground">
+                            Supervising Mentor: {project.mentor}
                           </span>
-                          <span>{project.members} members</span>
-                          <span className="flex items-center gap-1">
-                            <DollarSign className="h-4 w-4" />
-                            {project.budget}
+                          <span className="flex items-center gap-1 border-l pl-4">
+                            <Users className="h-4 w-4" />
+                            {project.team} ({project.members} Students)
                           </span>
                         </div>
                       </div>
-                      <Badge variant={project.status === "In Review" ? "default" : "secondary"}>
+                      <Badge variant={project.status === "Mentor QA" ? "default" : "secondary"} className={project.status === "Mentor QA" ? "bg-amber-500 hover:bg-amber-600" : ""}>
                         {project.status}
                       </Badge>
                     </div>
@@ -209,22 +213,25 @@ export default function ClientDashboard() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Recent Submissions</CardTitle>
-              <CardDescription>Review completed work from teams</CardDescription>
+              <CardTitle>Quality Assurance Submissions</CardTitle>
+              <CardDescription>Review milestones approved by Supervising Mentors</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {[
-                { project: "E-commerce Backend API", team: "Team Alpha", submitted: "2 hours ago", type: "Milestone 3" },
-                { project: "Mobile Wireframes v2", team: "Team Beta", submitted: "5 hours ago", type: "Design Review" },
-                { project: "Database Schema", team: "Team Gamma", submitted: "1 day ago", type: "Final Deliverable" },
+                { project: "E-commerce Backend API", team: "Team Alpha", mentor: "Sarah Kumar", submitted: "2 hours ago", type: "Milestone 3" },
+                { project: "Mobile Wireframes v2", team: "Team Beta", mentor: "Vikram Mehta", submitted: "5 hours ago", type: "Design Review" },
+                { project: "Database Schema", team: "Team Gamma", mentor: "Priya Sharma", submitted: "1 day ago", type: "Final Deliverable" },
               ].map((submission, i) => (
                 <div key={i} className="p-4 border rounded-lg hover:shadow-md transition-all bg-muted/30">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
-                      <div className="font-medium text-sm">{submission.project}</div>
-                      <div className="text-xs text-muted-foreground">{submission.team}</div>
+                      <div className="font-medium text-sm flex items-center gap-2">
+                        {submission.project} 
+                        <Badge variant="outline" className="text-[9px] h-4 bg-green-500/10 text-green-600 border-green-500/20">Mentor Approved</Badge>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">Executed by: {submission.team} | Supervised by: {submission.mentor}</div>
                     </div>
-                    <Badge variant="outline" className="text-xs">{submission.type}</Badge>
+                    <Badge variant="secondary" className="text-xs">{submission.type}</Badge>
                   </div>
                   <div className="flex items-center justify-between mt-3">
                     <div className="text-xs text-muted-foreground">Submitted {submission.submitted}</div>

@@ -7,7 +7,13 @@ const mockUser = {
   email: 'alex@student.edu',
   role: 'student',
   studentLevel: 'B',
-  avatarUrl: 'https://i.pravatar.cc/150?u=alex'
+  avatarUrl: 'https://i.pravatar.cc/150?u=alex',
+  reputation: {
+    professionalismScore: 92,
+    reliabilityScore: 88,
+    examIntegrityScore: 100,
+    collaborationRating: 85
+  }
 };
 
 export const handlers = [
