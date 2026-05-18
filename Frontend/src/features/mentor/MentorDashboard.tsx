@@ -10,27 +10,27 @@ export default function MentorDashboard() {
       <Routes>
         {/* Index route for /mentor */}
         <Route index element={<MentorOverview />} />
-        
+
         {/* Nested routes mapped to sidebar links */}
-        <Route 
-          path="students" 
-          element={<PlaceholderPage title="My Students" description="Manage and track your assigned students' progress." />} 
+        <Route
+          path="students"
+          element={<PlaceholderPage title="My Students" description="Manage and track your assigned students' progress." />}
         />
-        <Route 
-          path="submissions" 
-          element={<PlaceholderPage title="Submissions" description="Review code and provide feedback on student project submissions." />} 
+        <Route
+          path="submissions"
+          element={<PlaceholderPage title="Submissions" description="Review code and provide feedback on student project submissions." />}
         />
-        <Route 
-          path="schedule" 
-          element={<PlaceholderPage title="Schedule" description="Manage your availability and upcoming mentorship sessions." />} 
+        <Route
+          path="schedule"
+          element={<PlaceholderPage title="Schedule" description="Manage your availability and upcoming mentorship sessions." />}
         />
-        <Route 
-          path="messages" 
-          element={<PlaceholderPage title="Messages" description="Communicate with your assigned students." />} 
+        <Route
+          path="messages"
+          element={<PlaceholderPage title="Messages" description="Communicate with your assigned students." />}
         />
-        <Route 
-          path="achievements" 
-          element={<PlaceholderPage title="Achievements" description="View your mentor rating, success rate, and platform milestones." />} 
+        <Route
+          path="achievements"
+          element={<PlaceholderPage title="Achievements" description="View your mentor rating, success rate, and platform milestones." />}
         />
       </Routes>
     </DashboardLayout>

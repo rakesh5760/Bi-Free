@@ -1,0 +1,67 @@
+from typing import Optional, List
+from pydantic import BaseModel
+from datetime import date, datetime
+from enum import Enum
+from app.schemas.core import Skill, Domain
+
+class ProjectStatus(str, Enum):
+    PENDING = "Pending"
+    ASSIGNED = "Assigned"
+    IN_PROGRESS = "In Progress"
+    MENTOR_QA = "Mentor QA"
+    COMPLETED = "Completed"
+
+class TaskStatus(str, Enum):
+    TO_DO = "To Do"
+    IN_PROGRESS = "In Progress"
+    REVIEW = "Review"
+    DONE = "Done"
+
+class TaskPriority(str, Enum):
+    LOW = "Low"
+    MEDIUM = "Medium"
+    HIGH = "High"
+
+# Task
+class TaskBase(BaseModel):
+    title: str
+    status: TaskStatus = TaskStatus.TO_DO
+    priority: TaskPriority = TaskPriority.MEDIUM
+    github_pr_url: Optional[str] = None
+
+class TaskCreate(TaskBase):
+    project_id: int
+    assigned_to: Optional[int] = None
+
+class Task(TaskBase):
+    task_id: int
+    project_id: int
+    assigned_to: Optional[int] = None
+    created_at: datetime
+    updated_at: datetime
+    class Config:
+        from_attributes = True
+
+# Project
+class ProjectBase(BaseModel):
+    title: str
+    description: Optional[str] = None
+    budget: float
+    status: ProjectStatus = ProjectStatus.PENDING
+    deadline: Optional[date] = None
+
+class ProjectCreate(ProjectBase):
+    client_id: int
+    domain_id: Optional[int] = None
+    skill_ids: Optional[List[int]] = None
+
+class Project(ProjectBase):
+    project_id: int
+    client_id: int
+    domain: Optional[Domain] = None
+    required_skills: List[Skill] = []
+    created_at: datetime
+    updated_at: datetime
+    tasks: List[Task] = []
+    class Config:
+        from_attributes = True
