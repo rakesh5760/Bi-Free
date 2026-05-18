@@ -1,152 +1,162 @@
-import { Users, UserCheck, FileText, Home, Settings, Shield, CheckCircle, AlertTriangle, Filter, Plus, Briefcase, ArrowRight, UserPlus, Clock } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "../../components/ui/card";
+import { Users, UserCheck, FileText, Shield, CheckCircle, AlertTriangle, Briefcase, ArrowRight, UserPlus, Clock, Target } from "lucide-react";
+import { motion } from "motion/react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
-import { Avatar, AvatarFallback } from "../../components/ui/avatar";
 import { DashboardLayout } from "../../layouts/DashboardLayout";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
+import { FacultySidebar } from "./components/FacultySidebar";
 
-function Sidebar() {
-  const menuItems = [
-    { icon: Home, label: "Dashboard", active: true },
-    { icon: Users, label: "Students" },
-    { icon: UserCheck, label: "Mentors" },
-    { icon: FileText, label: "Project Allocations" },
-    { icon: AlertTriangle, label: "Escalations" },
-    { icon: Shield, label: "Approvals" },
-    { icon: Settings, label: "Settings" },
-  ];
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 }
+  }
+};
 
-  return (
-    <div className="flex flex-col h-full">
-      <div className="p-6 border-b">
-        <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center mb-2">
-          <Shield className="h-6 w-6 text-white" />
-        </div>
-        <div className="font-semibold">SkillForge</div>
-        <div className="text-xs text-muted-foreground">Faculty Portal</div>
-      </div>
-      <nav className="flex-1 p-4 space-y-1">
-        {menuItems.map((item, i) => (
-          <Button
-            key={i}
-            variant={item.active ? "secondary" : "ghost"}
-            className="w-full justify-start"
-          >
-            <item.icon className="mr-3 h-4 w-4" />
-            {item.label}
-          </Button>
-        ))}
-      </nav>
-    </div>
-  );
-}
+const fadeIn = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
+};
 
 export default function FacultyDashboard() {
   return (
-    <DashboardLayout sidebar={<Sidebar />} title="Faculty Dashboard">
-      <div className="space-y-6">
-        <div className="grid gap-6 md:grid-cols-4">
-          <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-sm font-medium text-muted-foreground">Total Students</div>
-                <Users className="h-5 w-5 text-primary" />
+    <DashboardLayout sidebar={<FacultySidebar />} title="Faculty Overview">
+      <motion.div 
+        className="space-y-6"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
+        {/* KPI Cards */}
+        <motion.div variants={fadeIn} className="grid gap-6 md:grid-cols-4">
+          <Card className="bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-lg transition-all duration-300">
+            <CardContent className="p-6 relative overflow-hidden">
+              <div className="absolute -right-4 -top-4 opacity-5 pointer-events-none">
+                <Users className="h-24 w-24" />
               </div>
-              <div className="text-3xl font-bold mb-1">215</div>
-              <div className="text-xs text-muted-foreground">+23 this month</div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Total Students</div>
+                <div className="h-8 w-8 rounded-full bg-indigo-500/10 flex items-center justify-center">
+                  <Users className="h-4 w-4 text-indigo-500" />
+                </div>
+              </div>
+              <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">215</div>
+              <div className="text-xs font-medium text-indigo-500 flex items-center gap-1">+23 this month</div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-secondary/10 to-secondary/5 border-secondary/20">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-sm font-medium text-muted-foreground">Active Mentors</div>
-                <UserCheck className="h-5 w-5 text-secondary" />
+          <Card className="bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-lg transition-all duration-300">
+            <CardContent className="p-6 relative overflow-hidden">
+              <div className="absolute -right-4 -top-4 opacity-5 pointer-events-none">
+                <UserCheck className="h-24 w-24" />
               </div>
-              <div className="text-3xl font-bold mb-1">38</div>
-              <div className="text-xs text-muted-foreground">2 pending approval</div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Active Mentors</div>
+                <div className="h-8 w-8 rounded-full bg-cyan-500/10 flex items-center justify-center">
+                  <UserCheck className="h-4 w-4 text-cyan-500" />
+                </div>
+              </div>
+              <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">38</div>
+              <div className="text-xs font-medium text-cyan-500">2 pending approval</div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-sm font-medium text-muted-foreground">Active Projects</div>
-                <FileText className="h-5 w-5 text-accent" />
+          <Card className="bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-lg transition-all duration-300">
+            <CardContent className="p-6 relative overflow-hidden">
+              <div className="absolute -right-4 -top-4 opacity-5 pointer-events-none">
+                <FileText className="h-24 w-24" />
               </div>
-              <div className="text-3xl font-bold mb-1">127</div>
-              <div className="text-xs text-muted-foreground">15 need approval</div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Active Projects</div>
+                <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+                  <FileText className="h-4 w-4 text-blue-500" />
+                </div>
+              </div>
+              <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">127</div>
+              <div className="text-xs font-medium text-amber-500">15 need allocation</div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-sm font-medium text-muted-foreground">Completion Rate</div>
-                <CheckCircle className="h-5 w-5 text-green-500" />
+          <Card className="bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-lg transition-all duration-300">
+            <CardContent className="p-6 relative overflow-hidden">
+              <div className="absolute -right-4 -top-4 opacity-5 pointer-events-none">
+                <CheckCircle className="h-24 w-24" />
               </div>
-              <div className="text-3xl font-bold mb-1">87%</div>
-              <div className="text-xs text-muted-foreground">+5% from last month</div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Completion Rate</div>
+                <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                  <CheckCircle className="h-4 w-4 text-emerald-500" />
+                </div>
+              </div>
+              <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">87%</div>
+              <div className="text-xs font-medium text-emerald-500 flex items-center gap-1">+5% from last month</div>
             </CardContent>
           </Card>
-        </div>
+        </motion.div>
 
-        {/* OPERATIONAL WORKFLOW AREA */}
-        <div className="grid gap-6 lg:grid-cols-3">
+        <motion.div variants={fadeIn} className="grid gap-6 lg:grid-cols-3">
           
           {/* Main Action Queue */}
           <div className="lg:col-span-2 space-y-6">
-            <Card className="border-primary/20 shadow-lg">
-              <CardHeader className="bg-primary/5 border-b border-primary/10">
-                <div className="flex items-center justify-between">
+            <Card className="bg-card/50 backdrop-blur-sm border-border/50 shadow-sm overflow-hidden">
+              <CardHeader className="bg-indigo-500/5 border-b border-indigo-500/10 pb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
-                    <CardTitle className="flex items-center gap-2 text-primary">
+                    <CardTitle className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
                       <Briefcase className="h-5 w-5" />
                       Pending Project Allocations
                     </CardTitle>
                     <CardDescription>Client projects awaiting Mentor and Team assignment</CardDescription>
                   </div>
-                  <Badge className="bg-primary hover:bg-primary">2 Action Required</Badge>
+                  <Badge className="bg-indigo-500 text-white hover:bg-indigo-600 shadow-sm px-3 py-1 text-xs">2 Action Required</Badge>
                 </div>
               </CardHeader>
               <CardContent className="p-0">
-                <div className="divide-y">
+                <div className="divide-y divide-border/50">
                   {[
-                    { client: "TechStart Corp", project: "E-commerce Backend Refactor", requiredSkills: ["Node.js", "PostgreSQL"], budget: "$4,500", submitted: "2 hours ago" },
-                    { client: "DesignHub Inc", project: "Dashboard UI Migration", requiredSkills: ["React", "Tailwind"], budget: "$3,200", submitted: "5 hours ago" },
+                    { client: "TechStart Corp", project: "E-commerce Backend Refactor", requiredSkills: ["Node.js", "PostgreSQL"], budget: "$4,500", submitted: "2h ago", priority: "high" },
+                    { client: "DesignHub Inc", project: "Dashboard UI Migration", requiredSkills: ["React", "Tailwind"], budget: "$3,200", submitted: "5h ago", priority: "medium" },
                   ].map((project, i) => (
                     <div key={i} className="p-6 hover:bg-muted/30 transition-colors">
-                      <div className="flex items-start justify-between mb-4">
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-6 gap-4">
                         <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <Badge variant="outline" className="text-xs font-normal">{project.client}</Badge>
-                            <span className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" /> {project.submitted}</span>
+                          <div className="flex items-center gap-3 mb-2">
+                            <Badge variant="outline" className="text-[10px] uppercase tracking-wider font-bold bg-background shadow-sm border-border/50">{project.client}</Badge>
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1"><Clock className="h-3 w-3" /> {project.submitted}</span>
+                            {project.priority === 'high' && (
+                              <Badge variant="outline" className="text-[10px] uppercase tracking-wider border-orange-500/30 text-orange-500 bg-orange-500/10">High Priority</Badge>
+                            )}
                           </div>
-                          <h3 className="text-lg font-semibold">{project.project}</h3>
+                          <h3 className="text-xl font-extrabold text-foreground">{project.project}</h3>
                         </div>
-                        <div className="text-right">
-                          <div className="font-semibold text-green-600 dark:text-green-400">{project.budget}</div>
+                        <div className="sm:text-right">
+                          <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Project Budget</div>
+                          <div className="font-bold text-lg text-emerald-500">{project.budget}</div>
                         </div>
                       </div>
                       
-                      <div className="mb-4">
-                        <span className="text-xs text-muted-foreground mr-2">Required Skills:</span>
-                        <div className="inline-flex gap-1">
+                      <div className="mb-6">
+                        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground mr-3">Required Technical Stack</span>
+                        <div className="inline-flex gap-2 mt-2 sm:mt-0">
                           {project.requiredSkills.map(skill => (
-                            <Badge key={skill} variant="secondary" className="text-[10px] h-5">{skill}</Badge>
+                            <Badge key={skill} variant="secondary" className="text-xs font-semibold bg-muted/50 border border-border/50">{skill}</Badge>
                           ))}
                         </div>
                       </div>
 
-                      <div className="bg-card border rounded-lg p-4 space-y-4">
-                        <div className="flex items-center justify-between">
-                          <div className="text-sm font-medium flex items-center gap-2">
-                            <UserCheck className="h-4 w-4 text-muted-foreground" /> Step 1: Assign Supervising Mentor
+                      <div className="bg-background/80 border border-border/50 rounded-xl p-5 space-y-5 shadow-inner">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div className="text-sm font-bold flex items-center gap-3 text-foreground">
+                            <div className="h-8 w-8 rounded bg-indigo-500/10 flex items-center justify-center">
+                              <UserCheck className="h-4 w-4 text-indigo-500" />
+                            </div>
+                            Step 1: Assign Supervising Mentor
                           </div>
                           <Select defaultValue="unassigned">
-                            <SelectTrigger className="w-[200px] h-8 text-xs">
+                            <SelectTrigger className="w-full sm:w-[240px] h-10 font-medium bg-card">
                               <SelectValue placeholder="Select Mentor" />
                             </SelectTrigger>
                             <SelectContent>
@@ -156,19 +166,22 @@ export default function FacultyDashboard() {
                             </SelectContent>
                           </Select>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <div className="text-sm font-medium flex items-center gap-2">
-                            <Users className="h-4 w-4 text-muted-foreground" /> Step 2: Select Level A Students
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-5 border-t border-border/50">
+                          <div className="text-sm font-bold flex items-center gap-3 text-foreground">
+                            <div className="h-8 w-8 rounded bg-cyan-500/10 flex items-center justify-center">
+                              <Users className="h-4 w-4 text-cyan-500" />
+                            </div>
+                            Step 2: Select Level A Students
                           </div>
-                          <Button size="sm" variant="outline" className="h-8 text-xs">
-                            <UserPlus className="h-3 w-3 mr-2" /> Browse Eligible Students
+                          <Button size="sm" variant="outline" className="h-10 font-semibold border-cyan-500/30 text-cyan-600 dark:text-cyan-400 hover:bg-cyan-500 hover:text-white transition-colors">
+                            <UserPlus className="h-4 w-4 mr-2" /> Browse Eligible Pool
                           </Button>
                         </div>
                       </div>
 
-                      <div className="mt-4 flex justify-end">
-                        <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md">
-                          Finalize Allocation & Launch Project <ArrowRight className="ml-2 h-4 w-4" />
+                      <div className="mt-6 flex justify-end">
+                        <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/20 font-bold h-11 px-6">
+                          Finalize Allocation & Deploy <ArrowRight className="ml-2 h-5 w-5" />
                         </Button>
                       </div>
                     </div>
@@ -177,14 +190,14 @@ export default function FacultyDashboard() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
+            <Card className="bg-card/50 backdrop-blur-sm border-border/50 shadow-sm">
+              <CardHeader className="border-b border-border/50 pb-4">
                 <CardTitle>Active Supervised Projects</CardTitle>
                 <CardDescription>Monitor ongoing mentor-led client engagements</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-4">
                 <Tabs defaultValue="active">
-                  <TabsList className="mb-4">
+                  <TabsList className="mb-4 bg-muted/50 border border-border/50">
                     <TabsTrigger value="active">Active Execution (12)</TabsTrigger>
                     <TabsTrigger value="review">Final Review (3)</TabsTrigger>
                   </TabsList>
@@ -193,19 +206,19 @@ export default function FacultyDashboard() {
                       { project: "Mobile App Wireframes", mentor: "Sarah Kumar", students: 2, progress: 65, status: "On Track" },
                       { project: "Database Optimization", mentor: "Arjun Nair", students: 3, progress: 30, status: "At Risk" },
                     ].map((active, i) => (
-                      <div key={i} className="flex items-center justify-between p-4 border rounded-lg bg-card hover:shadow-sm transition-all">
+                      <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 border border-border/50 rounded-xl bg-background/50 hover:shadow-md transition-all gap-4">
                         <div className="flex-1">
-                          <div className="font-medium">{active.project}</div>
-                          <div className="text-sm text-muted-foreground flex items-center gap-3 mt-1">
-                            <span className="flex items-center gap-1"><UserCheck className="h-3 w-3" /> {active.mentor}</span>
-                            <span className="flex items-center gap-1"><Users className="h-3 w-3" /> {active.students} Students</span>
+                          <div className="font-bold text-foreground mb-2">{active.project}</div>
+                          <div className="text-xs font-medium text-muted-foreground flex flex-wrap items-center gap-4">
+                            <span className="flex items-center gap-1.5"><UserCheck className="h-3.5 w-3.5" /> {active.mentor}</span>
+                            <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> {active.students} Assigned</span>
                           </div>
                         </div>
                         <div className="flex items-center gap-4">
-                          <Badge variant={active.status === "On Track" ? "default" : "destructive"} className={active.status === "On Track" ? "bg-green-500 hover:bg-green-600" : ""}>
+                          <Badge variant={active.status === "On Track" ? "default" : "destructive"} className={`uppercase tracking-wider text-[10px] px-2 py-0.5 ${active.status === "On Track" ? "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 border-emerald-500/20" : "bg-destructive/10 text-destructive hover:bg-destructive/20 border-destructive/20"} border`}>
                             {active.status}
                           </Badge>
-                          <Button size="sm" variant="ghost">Manage</Button>
+                          <Button size="sm" variant="ghost" className="font-semibold text-muted-foreground hover:text-foreground">Manage</Button>
                         </div>
                       </div>
                     ))}
@@ -217,28 +230,32 @@ export default function FacultyDashboard() {
 
           {/* Right Column: Escalations & Quick Filters */}
           <div className="space-y-6">
-            <Card className="border-destructive/30 shadow-md">
-              <CardHeader className="bg-destructive/5 border-b border-destructive/10 pb-4">
+            <Card className="border-destructive/30 shadow-lg shadow-destructive/5 bg-destructive/5">
+              <CardHeader className="border-b border-destructive/10 pb-4">
                 <CardTitle className="text-destructive flex items-center gap-2 text-lg">
-                  <AlertTriangle className="h-5 w-5" />
-                  Escalations
+                  <div className="relative flex h-3 w-3 mr-1">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-destructive"></span>
+                  </div>
+                  Escalation Hub
                 </CardTitle>
-                <CardDescription>Requires immediate faculty intervention</CardDescription>
+                <CardDescription className="text-destructive/80 font-medium">Requires immediate faculty intervention</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
-                <div className="divide-y">
+                <div className="divide-y divide-destructive/10">
                   {[
-                    { type: "Mentor Alert", issue: "Student Sneha missing milestones", project: "DB Opt" },
-                    { type: "Client Dispute", issue: "Scope change requested", project: "App Wireframes" },
+                    { type: "Mentor Alert", issue: "Student Sneha missing milestones", project: "DB Opt", time: "45m ago" },
+                    { type: "Client Dispute", issue: "Scope change requested", project: "App Wireframes", time: "2h ago" },
                   ].map((alert, i) => (
-                    <div key={i} className="p-4 hover:bg-muted/50 transition-colors">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="destructive" className="text-[10px] uppercase tracking-wider">{alert.type}</Badge>
+                    <div key={i} className="p-5 hover:bg-destructive/10 transition-colors">
+                      <div className="flex items-center justify-between mb-3">
+                        <Badge variant="destructive" className="text-[10px] uppercase tracking-wider border-destructive/20 bg-destructive/10 text-destructive">{alert.type}</Badge>
+                        <span className="text-[10px] font-bold text-destructive/70 flex items-center gap-1"><Clock className="h-3 w-3" /> {alert.time}</span>
                       </div>
-                      <div className="text-sm font-medium mt-1">{alert.issue}</div>
-                      <div className="text-xs text-muted-foreground mt-1">Project: {alert.project}</div>
-                      <Button size="sm" variant="outline" className="w-full mt-3 h-7 text-xs border-destructive/30 text-destructive hover:bg-destructive hover:text-white">
-                        Review & Resolve
+                      <div className="text-sm font-bold text-foreground mb-1 leading-tight">{alert.issue}</div>
+                      <div className="text-xs font-medium text-muted-foreground flex items-center gap-1.5"><Shield className="h-3 w-3" /> {alert.project}</div>
+                      <Button size="sm" className="w-full mt-4 h-9 font-bold bg-destructive text-white hover:bg-destructive/90 shadow-md shadow-destructive/20">
+                        Acknowledge & Resolve
                       </Button>
                     </div>
                   ))}
@@ -246,126 +263,27 @@ export default function FacultyDashboard() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Student Roster Query</CardTitle>
+            <Card className="bg-card/50 backdrop-blur-sm border-border/50 shadow-sm">
+              <CardHeader className="pb-4 border-b border-border/50">
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-indigo-500" /> Administrative Actions
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground">Filter by Qualification Level</label>
-                  <Select defaultValue="a">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="a">Level A (Project Ready)</SelectItem>
-                      <SelectItem value="b">Level B (Incubating)</SelectItem>
-                      <SelectItem value="c">Level C (Incubating)</SelectItem>
-                      <SelectItem value="d">Level D (Novice)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground">Filter by Trust Score</label>
-                  <Select defaultValue="high">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Professionalism Score" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="high">High Professionalism (&gt;90)</SelectItem>
-                      <SelectItem value="med">Average (70-90)</SelectItem>
-                      <SelectItem value="low">At Risk (&lt;70)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button className="w-full mt-2">Filter Students</Button>
+              <CardContent className="p-4 space-y-3">
+                <Button variant="outline" className="w-full justify-start h-12 font-semibold">
+                  <UserPlus className="mr-3 h-4 w-4 text-muted-foreground" /> Invite New Mentor
+                </Button>
+                <Button variant="outline" className="w-full justify-start h-12 font-semibold">
+                  <Target className="mr-3 h-4 w-4 text-muted-foreground" /> Review Level A Candidates
+                </Button>
+                <Button variant="outline" className="w-full justify-start h-12 font-semibold">
+                  <FileText className="mr-3 h-4 w-4 text-muted-foreground" /> Generate Compliance Report
+                </Button>
               </CardContent>
             </Card>
           </div>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Student Management</CardTitle>
-                <CardDescription>Filter and manage student accounts</CardDescription>
-              </div>
-              <div className="flex items-center gap-2">
-                <Select defaultValue="all">
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Filter by level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Levels</SelectItem>
-                    <SelectItem value="a">Level A</SelectItem>
-                    <SelectItem value="b">Level B</SelectItem>
-                    <SelectItem value="c">Level C</SelectItem>
-                    <SelectItem value="d">Level D</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button variant="outline" size="icon">
-                  <Filter className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[
-                { name: "Priya Sharma", email: "priya.sharma@university.edu", level: "B", mentor: "Sarah Kumar", projects: 3, status: "Active", performance: 85 },
-                { name: "Rahul Singh", email: "rahul.singh@university.edu", level: "C", mentor: "Vikram Mehta", projects: 2, status: "Active", performance: 72 },
-                { name: "Anjali Patel", email: "anjali.patel@university.edu", level: "B", mentor: "Sarah Kumar", projects: 4, status: "Active", performance: 78 },
-                { name: "Vikram Reddy", email: "vikram.reddy@university.edu", level: "A", mentor: "Arjun Nair", projects: 5, status: "Active", performance: 92 },
-                { name: "Sneha Desai", email: "sneha.desai@university.edu", level: "D", mentor: "Unassigned", projects: 1, status: "Pending", performance: 45 },
-              ].map((student, i) => (
-                <div key={i} className="p-4 border rounded-lg hover:shadow-md transition-all bg-card/50">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-start gap-3 flex-1">
-                      <Avatar className="h-10 w-10">
-                        <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white">
-                          {student.name.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <div className="font-semibold">{student.name}</div>
-                        <div className="text-sm text-muted-foreground">{student.email}</div>
-                      </div>
-                    </div>
-                    <Badge variant={student.status === "Active" ? "default" : "secondary"}>
-                      {student.status}
-                    </Badge>
-                  </div>
-                  <div className="grid grid-cols-4 gap-4 text-sm">
-                    <div>
-                      <div className="text-muted-foreground text-xs mb-1">Skill Level</div>
-                      <div className="font-medium">Level {student.level}</div>
-                    </div>
-                    <div>
-                      <div className="text-muted-foreground text-xs mb-1">Mentor</div>
-                      <div className="font-medium">{student.mentor}</div>
-                    </div>
-                    <div>
-                      <div className="text-muted-foreground text-xs mb-1">Projects</div>
-                      <div className="font-medium">{student.projects}</div>
-                    </div>
-                    <div>
-                      <div className="text-muted-foreground text-xs mb-1">Performance</div>
-                      <div className="font-medium">{student.performance}%</div>
-                    </div>
-                  </div>
-                  <div className="mt-3 flex gap-2">
-                    <Button variant="outline" size="sm">View Details</Button>
-                    {student.mentor === "Unassigned" && (
-                      <Button size="sm">Assign Mentor</Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+        </motion.div>
+      </motion.div>
     </DashboardLayout>
   );
 }

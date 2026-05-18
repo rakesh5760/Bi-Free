@@ -1,4 +1,5 @@
-import { Briefcase, Plus, MessageSquare, FileCheck, Clock, Home, Settings, DollarSign, Users, CheckCircle } from "lucide-react";
+import { Briefcase, MessageSquare, Clock, DollarSign, Users, CheckCircle, ChevronRight, Activity, DownloadCloud } from "lucide-react";
+import { motion } from "motion/react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
@@ -6,277 +7,249 @@ import { Progress } from "../../components/ui/progress";
 import { Avatar, AvatarFallback } from "../../components/ui/avatar";
 import { DashboardLayout } from "../../layouts/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
+import { ClientSidebar } from "./components/ClientSidebar";
 
-function Sidebar() {
-  const menuItems = [
-    { icon: Home, label: "Dashboard", active: true },
-    { icon: Briefcase, label: "My Projects" },
-    { icon: MessageSquare, label: "Messages" },
-    { icon: FileCheck, label: "Submissions" },
-    { icon: Settings, label: "Settings" },
-  ];
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 }
+  }
+};
 
-  return (
-    <div className="flex flex-col h-full">
-      <div className="p-6 border-b">
-        <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-accent to-secondary flex items-center justify-center mb-2">
-          <Briefcase className="h-6 w-6 text-white" />
-        </div>
-        <div className="font-semibold">SkillForge</div>
-        <div className="text-xs text-muted-foreground">Client Portal</div>
-      </div>
-      <nav className="flex-1 p-4 space-y-1">
-        {menuItems.map((item, i) => (
-          <Button
-            key={i}
-            variant={item.active ? "secondary" : "ghost"}
-            className="w-full justify-start"
-          >
-            <item.icon className="mr-3 h-4 w-4" />
-            {item.label}
-          </Button>
-        ))}
-      </nav>
-      <div className="p-4 border-t">
-        <Button className="w-full bg-gradient-to-r from-primary to-secondary">
-          <Plus className="mr-2 h-4 w-4" />
-          Post New Project
-        </Button>
-      </div>
-    </div>
-  );
-}
+const fadeIn = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
+};
 
 export default function ClientDashboard() {
   return (
-    <DashboardLayout sidebar={<Sidebar />} title="Client Dashboard">
-      <div className="space-y-6">
-        <div className="grid gap-6 md:grid-cols-4">
-          <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-sm font-medium text-muted-foreground">Active Projects</div>
-                <Briefcase className="h-5 w-5 text-primary" />
+    <DashboardLayout sidebar={<ClientSidebar />} title="Client Overview">
+      <motion.div 
+        className="space-y-6"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
+        {/* KPI Cards */}
+        <motion.div variants={fadeIn} className="grid gap-6 md:grid-cols-4">
+          <Card className="bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-lg transition-all duration-300">
+            <CardContent className="p-6 relative overflow-hidden">
+              <div className="absolute -right-4 -top-4 opacity-5 pointer-events-none">
+                <Briefcase className="h-24 w-24" />
               </div>
-              <div className="text-3xl font-bold mb-1">8</div>
-              <div className="text-xs text-muted-foreground">3 in progress</div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Active Projects</div>
+                <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                  <Briefcase className="h-4 w-4 text-emerald-500" />
+                </div>
+              </div>
+              <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">8</div>
+              <div className="text-xs font-medium text-emerald-500">3 in progress</div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-secondary/10 to-secondary/5 border-secondary/20">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-sm font-medium text-muted-foreground">Total Spent</div>
-                <DollarSign className="h-5 w-5 text-secondary" />
+          <Card className="bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-lg transition-all duration-300">
+            <CardContent className="p-6 relative overflow-hidden">
+              <div className="absolute -right-4 -top-4 opacity-5 pointer-events-none">
+                <DollarSign className="h-24 w-24" />
               </div>
-              <div className="text-3xl font-bold mb-1">$12,450</div>
-              <div className="text-xs text-muted-foreground">This quarter</div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Total Spent</div>
+                <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+                  <DollarSign className="h-4 w-4 text-blue-500" />
+                </div>
+              </div>
+              <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">$12,450</div>
+              <div className="text-xs font-medium text-muted-foreground">This quarter</div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-sm font-medium text-muted-foreground">Completed</div>
-                <CheckCircle className="h-5 w-5 text-green-500" />
+          <Card className="bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-lg transition-all duration-300">
+            <CardContent className="p-6 relative overflow-hidden">
+              <div className="absolute -right-4 -top-4 opacity-5 pointer-events-none">
+                <CheckCircle className="h-24 w-24" />
               </div>
-              <div className="text-3xl font-bold mb-1">24</div>
-              <div className="text-xs text-muted-foreground">95% success rate</div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Completed</div>
+                <div className="h-8 w-8 rounded-full bg-indigo-500/10 flex items-center justify-center">
+                  <CheckCircle className="h-4 w-4 text-indigo-500" />
+                </div>
+              </div>
+              <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">24</div>
+              <div className="text-xs font-medium text-indigo-500">95% success rate</div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-sm font-medium text-muted-foreground">Active Teams</div>
-                <Users className="h-5 w-5 text-accent" />
+          <Card className="bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-lg transition-all duration-300">
+            <CardContent className="p-6 relative overflow-hidden">
+              <div className="absolute -right-4 -top-4 opacity-5 pointer-events-none">
+                <Users className="h-24 w-24" />
               </div>
-              <div className="text-3xl font-bold mb-1">5</div>
-              <div className="text-xs text-muted-foreground">18 team members</div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Active Teams</div>
+                <div className="h-8 w-8 rounded-full bg-cyan-500/10 flex items-center justify-center">
+                  <Users className="h-4 w-4 text-cyan-500" />
+                </div>
+              </div>
+              <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">5</div>
+              <div className="text-xs font-medium text-muted-foreground">18 team members</div>
             </CardContent>
           </Card>
-        </div>
+        </motion.div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Active Supervised Projects</CardTitle>
-            <CardDescription>Track deliverables for your mentor-supervised teams</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="all">
-              <TabsList>
-                <TabsTrigger value="all">All Projects</TabsTrigger>
-                <TabsTrigger value="progress">In Execution</TabsTrigger>
-                <TabsTrigger value="review">Mentor QA</TabsTrigger>
-              </TabsList>
-              <TabsContent value="all" className="space-y-4 mt-4">
-                {[
-                  { title: "E-commerce Website Development", team: "Team Alpha", mentor: "Sarah Kumar", members: 3, progress: 75, status: "In Execution", deadline: "May 18, 2026", budget: "$3,500" },
-                  { title: "Mobile App UI/UX Design", team: "Team Beta", mentor: "Vikram Mehta", members: 2, progress: 45, status: "In Execution", deadline: "May 25, 2026", budget: "$2,800" },
-                  { title: "Database Migration & Optimization", team: "Team Gamma", mentor: "Priya Sharma", members: 4, progress: 90, status: "Mentor QA", deadline: "May 15, 2026", budget: "$4,200" },
-                ].map((project, i) => (
-                  <div key={i} className="p-6 border rounded-lg hover:shadow-lg transition-all bg-card/50">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <div className="flex gap-2 mb-2">
-                           <Badge variant="outline" className="bg-primary/5 text-primary text-[10px] uppercase tracking-wider border-primary/20">Faculty Allocated</Badge>
-                           <Badge variant="outline" className="bg-blue-500/5 text-blue-600 dark:text-blue-400 text-[10px] uppercase tracking-wider border-blue-500/20 flex items-center gap-1">
-                             <CheckCircle className="h-3 w-3" /> Mentor Supervised
-                           </Badge>
+        <motion.div variants={fadeIn} className="grid gap-6 lg:grid-cols-3">
+          {/* Main Action Queue */}
+          <div className="lg:col-span-2 space-y-6">
+            <Card className="bg-card/50 backdrop-blur-sm border-border/50 shadow-sm h-full">
+              <CardHeader className="border-b border-border/50 pb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <CardTitle className="text-xl">Active Supervised Projects</CardTitle>
+                    <CardDescription>Track deliverables for your mentor-supervised teams</CardDescription>
+                  </div>
+                  <Tabs defaultValue="all" className="w-auto">
+                    <TabsList className="bg-muted/50 border border-border/50">
+                      <TabsTrigger value="all">All Projects</TabsTrigger>
+                      <TabsTrigger value="progress">In Execution</TabsTrigger>
+                      <TabsTrigger value="review">Mentor QA</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="divide-y divide-border/50">
+                  {[
+                    { title: "E-commerce Website Development", team: "Team Alpha", mentor: "Sarah Kumar", members: 3, progress: 75, status: "In Execution", deadline: "May 18, 2026", budget: "$3,500" },
+                    { title: "Mobile App UI/UX Design", team: "Team Beta", mentor: "Vikram Mehta", members: 2, progress: 45, status: "In Execution", deadline: "May 25, 2026", budget: "$2,800" },
+                    { title: "Database Migration & Optimization", team: "Team Gamma", mentor: "Priya Sharma", members: 4, progress: 90, status: "Mentor QA", deadline: "May 15, 2026", budget: "$4,200" },
+                  ].map((project, i) => (
+                    <div key={i} className="p-6 hover:bg-muted/30 transition-colors">
+                      <div className="flex flex-col md:flex-row md:items-start justify-between mb-4 gap-4">
+                        <div className="flex-1">
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            <Badge variant="outline" className="bg-background text-foreground text-[10px] uppercase tracking-wider font-bold shadow-sm">Supervised Build</Badge>
+                            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] uppercase tracking-wider border-emerald-500/20 flex items-center gap-1 font-bold">
+                              <CheckCircle className="h-3 w-3" /> Mentor: {project.mentor}
+                            </Badge>
+                          </div>
+                          <h3 className="font-extrabold text-lg mb-2 text-foreground">{project.title}</h3>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground font-medium">
+                            <span className="flex items-center gap-1.5">
+                              <Users className="h-4 w-4" />
+                              {project.team} ({project.members} Students)
+                            </span>
+                            <span className="flex items-center gap-1.5 border-l border-border/50 pl-4 text-foreground">
+                              <DollarSign className="h-4 w-4 text-muted-foreground" />
+                              {project.budget}
+                            </span>
+                          </div>
                         </div>
-                        <h3 className="font-semibold text-lg mb-1">{project.title}</h3>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1 font-medium text-foreground">
-                            Supervising Mentor: {project.mentor}
-                          </span>
-                          <span className="flex items-center gap-1 border-l pl-4">
-                            <Users className="h-4 w-4" />
-                            {project.team} ({project.members} Students)
-                          </span>
+                        <div className="md:text-right flex flex-col md:items-end gap-2">
+                          <Badge 
+                            variant={project.status === "Mentor QA" ? "default" : "secondary"} 
+                            className={`uppercase tracking-wider text-[10px] px-3 py-1 font-bold ${project.status === "Mentor QA" ? "bg-amber-500 text-white hover:bg-amber-600 shadow-sm" : "bg-muted/50 border border-border/50"}`}
+                          >
+                            {project.status}
+                          </Badge>
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground mt-2">
+                            <Clock className="h-3.5 w-3.5" />
+                            Due {project.deadline}
+                          </div>
                         </div>
                       </div>
-                      <Badge variant={project.status === "Mentor QA" ? "default" : "secondary"} className={project.status === "Mentor QA" ? "bg-amber-500 hover:bg-amber-600" : ""}>
-                        {project.status}
-                      </Badge>
-                    </div>
-                    <div className="space-y-3">
-                      <div>
-                        <div className="flex items-center justify-between text-sm mb-2">
-                          <span className="text-muted-foreground">Progress</span>
-                          <span className="font-medium">{project.progress}%</span>
+                      
+                      <div className="bg-background border border-border/50 rounded-xl p-4 mt-6">
+                        <div className="flex items-center justify-between text-xs font-bold mb-2">
+                          <span className="text-muted-foreground uppercase tracking-wider">Milestone Completion</span>
+                          <span className={project.progress === 100 ? "text-emerald-500" : "text-foreground"}>{project.progress}%</span>
                         </div>
-                        <Progress value={project.progress} className="h-2" />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Clock className="h-4 w-4" />
-                          <span>Deadline: {project.deadline}</span>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm">
+                        <Progress value={project.progress} className="h-2 bg-muted/50 mb-4" />
+                        <div className="flex gap-3 justify-end border-t border-border/50 pt-4 mt-2">
+                          <Button variant="outline" size="sm" className="font-semibold">
                             <MessageSquare className="mr-2 h-4 w-4" />
                             Message Team
                           </Button>
-                          <Button size="sm">View Details</Button>
+                          <Button size="sm" className="font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm">View Workboard <ChevronRight className="ml-1 h-4 w-4" /></Button>
                         </div>
                       </div>
                     </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Column: QA Submissions & Activity */}
+          <div className="space-y-6">
+            <Card className="bg-card/50 backdrop-blur-sm border-border/50 shadow-sm">
+              <CardHeader className="bg-blue-500/5 border-b border-blue-500/10 pb-4">
+                <CardTitle className="text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                  <FileCheck className="h-5 w-5" />
+                  Quality Assurance Deliverables
+                </CardTitle>
+                <CardDescription>Review milestones approved by Mentors</CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="divide-y divide-border/50">
+                  {[
+                    { project: "E-commerce Backend API", team: "Team Alpha", mentor: "Sarah Kumar", submitted: "2h ago", type: "Milestone 3" },
+                    { project: "Mobile Wireframes v2", team: "Team Beta", mentor: "Vikram Mehta", submitted: "5h ago", type: "Design Review" },
+                  ].map((submission, i) => (
+                    <div key={i} className="p-5 hover:bg-muted/30 transition-colors">
+                      <div className="flex items-center justify-between mb-3">
+                        <Badge variant="outline" className="text-[10px] uppercase tracking-wider font-bold bg-muted/50">{submission.type}</Badge>
+                        <span className="text-[10px] font-bold text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" /> {submission.submitted}</span>
+                      </div>
+                      <div className="font-bold text-foreground text-sm mb-1">{submission.project}</div>
+                      <div className="text-xs font-medium text-muted-foreground flex items-center gap-2 mb-4">
+                        <span>{submission.team}</span>
+                        <span className="h-1 w-1 rounded-full bg-border" />
+                        <span className="text-emerald-500 flex items-center gap-1"><CheckCircle className="h-3 w-3" /> QA Passed</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" className="w-full text-xs font-semibold">
+                          <DownloadCloud className="mr-2 h-3.5 w-3.5" /> Fetch Assets
+                        </Button>
+                        <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm text-xs font-semibold">Client Review</Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card/50 backdrop-blur-sm border-border/50 shadow-sm">
+              <CardHeader className="pb-4 border-b border-border/50">
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-emerald-500" /> Recent Activity
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 space-y-4">
+                {[
+                  { user: "Sarah Kumar", action: "approved a pull request for", project: "Database Migration", time: "1 hour ago", icon: CheckCircle, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+                  { user: "Team Alpha", action: "completed task 'Authentication'", project: "E-commerce Website", time: "3 hours ago", icon: Briefcase, color: "text-blue-500", bg: "bg-blue-500/10" },
+                  { user: "Vikram Mehta", action: "left feedback on", project: "Mobile App UI", time: "Yesterday", icon: MessageSquare, color: "text-amber-500", bg: "bg-amber-500/10" },
+                ].map((activity, i) => (
+                  <div key={i} className="flex gap-4">
+                    <div className={`h-8 w-8 rounded-full ${activity.bg} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                      <activity.icon className={`h-4 w-4 ${activity.color}`} />
+                    </div>
+                    <div>
+                      <div className="text-sm">
+                        <span className="font-semibold text-foreground">{activity.user}</span>{" "}
+                        <span className="text-muted-foreground">{activity.action}</span>{" "}
+                        <span className="font-medium text-foreground">{activity.project}</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1 font-medium">{activity.time}</div>
+                    </div>
                   </div>
                 ))}
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Assigned Teams</CardTitle>
-              <CardDescription>View team members working on your projects</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {[
-                { name: "Team Alpha", lead: "Priya Sharma", members: ["PS", "RS", "AP"], project: "E-commerce Website", rating: 4.8 },
-                { name: "Team Beta", lead: "Vikram Reddy", members: ["VR", "SD"], project: "Mobile App UI/UX", rating: 4.9 },
-                { name: "Team Gamma", lead: "Anjali Patel", members: ["AP", "KP", "MI", "RK"], project: "Database Migration", rating: 4.7 },
-              ].map((team, i) => (
-                <div key={i} className="p-4 border rounded-lg hover:shadow-md transition-all bg-muted/30">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <div className="font-semibold">{team.name}</div>
-                      <div className="text-sm text-muted-foreground">Lead: {team.lead}</div>
-                    </div>
-                    <div className="flex gap-0.5">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <span key={i} className={`text-xs ${i < Math.floor(team.rating) ? 'text-yellow-400' : 'text-muted'}`}>★</span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 mb-3">
-                    {team.members.map((member, j) => (
-                      <Avatar key={j} className="h-8 w-8">
-                        <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white text-xs">
-                          {member}
-                        </AvatarFallback>
-                      </Avatar>
-                    ))}
-                    <span className="text-sm text-muted-foreground ml-2">{team.members.length} members</span>
-                  </div>
-                  <div className="text-sm text-muted-foreground mb-3">Working on: {team.project}</div>
-                  <Button variant="outline" size="sm" className="w-full">
-                    View Team Profile
-                  </Button>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Quality Assurance Submissions</CardTitle>
-              <CardDescription>Review milestones approved by Supervising Mentors</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {[
-                { project: "E-commerce Backend API", team: "Team Alpha", mentor: "Sarah Kumar", submitted: "2 hours ago", type: "Milestone 3" },
-                { project: "Mobile Wireframes v2", team: "Team Beta", mentor: "Vikram Mehta", submitted: "5 hours ago", type: "Design Review" },
-                { project: "Database Schema", team: "Team Gamma", mentor: "Priya Sharma", submitted: "1 day ago", type: "Final Deliverable" },
-              ].map((submission, i) => (
-                <div key={i} className="p-4 border rounded-lg hover:shadow-md transition-all bg-muted/30">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <div className="font-medium text-sm flex items-center gap-2">
-                        {submission.project} 
-                        <Badge variant="outline" className="text-[9px] h-4 bg-green-500/10 text-green-600 border-green-500/20">Mentor Approved</Badge>
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-1">Executed by: {submission.team} | Supervised by: {submission.mentor}</div>
-                    </div>
-                    <Badge variant="secondary" className="text-xs">{submission.type}</Badge>
-                  </div>
-                  <div className="flex items-center justify-between mt-3">
-                    <div className="text-xs text-muted-foreground">Submitted {submission.submitted}</div>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline">Download</Button>
-                      <Button size="sm">Review</Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Project Timeline</CardTitle>
-            <CardDescription>Upcoming milestones and deadlines</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[
-                { date: "May 15, 2026", milestone: "Database Migration - Final Review", project: "Database Optimization", status: "upcoming" },
-                { date: "May 18, 2026", milestone: "E-commerce - Beta Launch", project: "E-commerce Website", status: "upcoming" },
-                { date: "May 20, 2026", milestone: "UI/UX - Design Handoff", project: "Mobile App UI/UX", status: "scheduled" },
-                { date: "May 25, 2026", milestone: "Final Presentation", project: "Mobile App UI/UX", status: "scheduled" },
-              ].map((item, i) => (
-                <div key={i} className="flex items-start gap-4 p-4 border rounded-lg bg-muted/30">
-                  <div className="flex flex-col items-center gap-1 min-w-[70px]">
-                    <div className="text-2xl font-bold">{item.date.split(' ')[1].replace(',', '')}</div>
-                    <div className="text-xs text-muted-foreground">{item.date.split(' ')[0]}</div>
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-semibold mb-1">{item.milestone}</div>
-                    <div className="text-sm text-muted-foreground">{item.project}</div>
-                  </div>
-                  <Badge variant={item.status === "upcoming" ? "default" : "secondary"}>
-                    {item.status}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              </CardContent>
+            </Card>
+          </div>
+        </motion.div>
+      </motion.div>
     </DashboardLayout>
   );
 }

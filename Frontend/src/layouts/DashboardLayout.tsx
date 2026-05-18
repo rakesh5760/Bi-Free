@@ -146,7 +146,7 @@ export function DashboardLayout({ children, sidebar, title }: DashboardLayoutPro
                         <AvatarImage src={user.avatarUrl} alt={user.name} />
                       ) : (
                         <AvatarFallback className="bg-gradient-to-br from-primary to-violet-600 text-white text-xs font-medium">
-                          {user?.name?.substring(0, 2).toUpperCase() || <User className="h-4 w-4" />}
+                          {user?.name ? user.name.substring(0, 2).toUpperCase() : <User className="h-4 w-4" />}
                         </AvatarFallback>
                       )}
                     </Avatar>
@@ -159,7 +159,7 @@ export function DashboardLayout({ children, sidebar, title }: DashboardLayoutPro
                         <AvatarImage src={user.avatarUrl} alt={user.name} />
                       ) : (
                         <AvatarFallback className="bg-gradient-to-br from-primary to-violet-600 text-white font-medium">
-                          {user?.name?.substring(0, 2).toUpperCase()}
+                          {user?.name ? user.name.substring(0, 2).toUpperCase() : ''}
                         </AvatarFallback>
                       )}
                     </Avatar>
