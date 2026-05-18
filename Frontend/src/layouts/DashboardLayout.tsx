@@ -179,9 +179,9 @@ export function DashboardLayout({ children, sidebar, title }: DashboardLayoutPro
                     </div>
                   </div>
                   <DropdownMenuGroup className="p-1">
-                    <DropdownMenuItem className="cursor-pointer">Profile Settings</DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer">Billing & Subscriptions</DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer">Security</DropdownMenuItem>
+                    <DropdownMenuItem className="cursor-pointer" asChild><Link to="/settings/profile">Profile Settings</Link></DropdownMenuItem>
+                    <DropdownMenuItem className="cursor-pointer" asChild><Link to="/settings/billing">Billing & Subscriptions</Link></DropdownMenuItem>
+                    <DropdownMenuItem className="cursor-pointer" asChild><Link to="/settings/security">Security</Link></DropdownMenuItem>
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer m-1">
