@@ -4,7 +4,7 @@ from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.config import settings
-from app.routes.v1 import auth, users, students, learning
+from app.routes.v1 import auth, users, students, learning, exams, faculty, mentors, clients, projects, reputation, analytics
 from app.utils.exceptions import validation_exception_handler, http_exception_handler, global_exception_handler
 
 app = FastAPI(
@@ -32,6 +32,13 @@ app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["aut
 app.include_router(users.router, prefix=f"{settings.API_V1_STR}/users", tags=["users"])
 app.include_router(students.router, prefix=f"{settings.API_V1_STR}/students", tags=["students"])
 app.include_router(learning.router, prefix=f"{settings.API_V1_STR}/learning", tags=["learning"])
+app.include_router(exams.router, prefix=f"{settings.API_V1_STR}/exams", tags=["exams"])
+app.include_router(faculty.router, prefix=f"{settings.API_V1_STR}/faculty", tags=["faculty"])
+app.include_router(mentors.router, prefix=f"{settings.API_V1_STR}/mentors", tags=["mentors"])
+app.include_router(clients.router, prefix=f"{settings.API_V1_STR}/clients", tags=["clients"])
+app.include_router(projects.router, prefix=f"{settings.API_V1_STR}/projects", tags=["projects"])
+app.include_router(reputation.router, prefix=f"{settings.API_V1_STR}/reputation", tags=["reputation"])
+app.include_router(analytics.router, prefix=f"{settings.API_V1_STR}/analytics", tags=["analytics"])
 
 @app.get("/")
 def root():

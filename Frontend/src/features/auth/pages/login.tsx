@@ -31,11 +31,33 @@ export default function LoginPage() {
     setError('');
 
     try {
-      // Calls MSW mock handler
-      const response = await api.post('/auth/login', { email, password });
-      const { user, token } = response.data;
+      // 1. Get access token via OAuth2 password flow
+      const formData = new URLSearchParams();
+      formData.append('username', email);
+      formData.append('password', password);
+
+      const tokenResponse = await api.post('/auth/login', formData, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      });
+      const token = tokenResponse.data.access_token;
+
+      // 2. Fetch user profile
+      const userResponse = await api.get('/users/me', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const userData = userResponse.data.data;
       
-      login(user, token);
+      const mappedRole = userData.role?.role_name?.toLowerCase() || 'student';
+      const mappedUser = {
+        id: userData.user_id.toString(),
+        name: `${userData.first_name} ${userData.last_name}`,
+        email: userData.email,
+        role: mappedRole,
+        studentLevel: userData.student_profile?.level?.name?.replace('Level ', '') || null
+      };
+
+      // 3. Authenticate in Zustand store
+      login(mappedUser as any, token);
       
       // Navigate to intended route or default role dashboard
       if (location.state?.from?.pathname) {
@@ -48,9 +70,10 @@ export default function LoginPage() {
           client: '/client',
           admin: '/admin',
         };
-        navigate(dashboardRoutes[user.role] || '/', { replace: true });
+        navigate(dashboardRoutes[mappedRole] || '/', { replace: true });
       }
     } catch (err) {
+      console.error(err);
       setError('Invalid email or password');
     } finally {
       setIsLoading(false);

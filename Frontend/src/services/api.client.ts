@@ -3,7 +3,7 @@ import { useAuthStore } from '../store/useAuthStore';
 
 // Create a centralized Axios instance
 export const api = axios.create({
-  baseURL: '/api', // Using relative path for MSW to intercept
+  baseURL: 'http://localhost:8000/api/v1', // Connected to FastAPI Backend
   headers: {
     'Content-Type': 'application/json',
   },

@@ -2,6 +2,7 @@ from fastapi import Request, status
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from app.utils.logger import logger
 from app.utils.responses import error_response
 
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -19,8 +20,12 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     )
 
 async def global_exception_handler(request: Request, exc: Exception):
-    # In production, do not expose raw exception strings to the client for security reasons
+    logger.error(f"Unhandled Exception: {str(exc)}", exc_info=True)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content=error_response(message="Internal Server Error", data=str(exc)).model_dump()
+        content={
+            "success": False,
+            "message": "An unexpected error occurred. Please try again later.",
+            "data": None
+        }
     )

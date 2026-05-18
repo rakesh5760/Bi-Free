@@ -3,6 +3,13 @@ from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from app.schemas.profile import StudentProfile, MentorProfile, ClientProfile
 
+class RoleBase(BaseModel):
+    role_id: int
+    role_name: str
+
+    class Config:
+        from_attributes = True
+
 class UserBase(BaseModel):
     email: Optional[EmailStr] = None
     first_name: Optional[str] = None
@@ -29,6 +36,7 @@ class UserInDBBase(UserBase):
         from_attributes = True
 
 class User(UserInDBBase):
+    role: RoleBase
     student_profile: Optional[StudentProfile] = None
     mentor_profile: Optional[MentorProfile] = None
     client_profile: Optional[ClientProfile] = None

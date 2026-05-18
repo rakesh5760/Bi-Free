@@ -1,4 +1,5 @@
-import { Users, FileText, TrendingUp, Award, ArrowRight, Activity, CalendarCheck, CheckCircle2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Users, FileText, TrendingUp, Award, ArrowRight, Activity, CalendarCheck, CheckCircle2, Loader2 } from "lucide-react";
 import { motion } from "motion/react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
@@ -7,6 +8,7 @@ import { Progress } from "../../../components/ui/progress";
 import { Avatar, AvatarFallback } from "../../../components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger } from "../../../components/ui/tabs";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { api } from "../../../services/api.client";
 
 const performanceData = [
   { name: "Jan", students: 8 },
@@ -30,6 +32,29 @@ const fadeIn = {
 };
 
 export function MentorOverview() {
+  const [analytics, setAnalytics] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchAnalytics() {
+      try {
+        const res = await api.get('/analytics/mentor/me');
+        if (res.data.success) {
+          setAnalytics(res.data.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch mentor analytics", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchAnalytics();
+  }, []);
+
+  // Calculate mock success rate
+  const total = (analytics?.total_active_allocations || 0) + (analytics?.total_completed_allocations || 0);
+  const successRate = total > 0 ? Math.round((analytics.total_completed_allocations / total) * 100) : 100;
+
   return (
     <motion.div 
       className="space-y-6"
@@ -45,13 +70,15 @@ export function MentorOverview() {
               <Users className="h-24 w-24" />
             </div>
             <div className="flex items-center justify-between mb-4">
-              <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Total Students</div>
+              <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Total Active Allocations</div>
               <div className="h-8 w-8 rounded-full bg-violet-500/10 flex items-center justify-center">
                 <Users className="h-4 w-4 text-violet-500" />
               </div>
             </div>
-            <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">22</div>
-            <div className="text-xs font-medium text-violet-500 flex items-center gap-1"><TrendingUp className="h-3 w-3" /> +3 this month</div>
+            <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">
+              {isLoading ? <Loader2 className="animate-spin h-6 w-6" /> : (analytics?.total_active_allocations || 0)}
+            </div>
+            <div className="text-xs font-medium text-violet-500 flex items-center gap-1"><TrendingUp className="h-3 w-3" /> +1 this month</div>
           </CardContent>
         </Card>
 
@@ -61,13 +88,15 @@ export function MentorOverview() {
               <FileText className="h-24 w-24" />
             </div>
             <div className="flex items-center justify-between mb-4">
-              <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Active Projects</div>
+              <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Completed Allocations</div>
               <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center">
                 <FileText className="h-4 w-4 text-blue-500" />
               </div>
             </div>
-            <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">15</div>
-            <div className="text-xs font-medium text-blue-500">8 pending reviews</div>
+            <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">
+              {isLoading ? <Loader2 className="animate-spin h-6 w-6" /> : (analytics?.total_completed_allocations || 0)}
+            </div>
+            <div className="text-xs font-medium text-blue-500">Graduated Teams</div>
           </CardContent>
         </Card>
 
@@ -82,8 +111,10 @@ export function MentorOverview() {
                 <CheckCircle2 className="h-4 w-4 text-emerald-500" />
               </div>
             </div>
-            <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">92%</div>
-            <div className="text-xs font-medium text-emerald-500">Top 10% of Mentors</div>
+            <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">
+              {isLoading ? <Loader2 className="animate-spin h-6 w-6" /> : `${successRate}%`}
+            </div>
+            <div className="text-xs font-medium text-emerald-500">Based on completions</div>
           </CardContent>
         </Card>
 
@@ -93,13 +124,15 @@ export function MentorOverview() {
               <Award className="h-24 w-24" />
             </div>
             <div className="flex items-center justify-between mb-4">
-              <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Mentor Rating</div>
+              <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Tasks Reviewed</div>
               <div className="h-8 w-8 rounded-full bg-amber-500/10 flex items-center justify-center">
                 <Award className="h-4 w-4 text-amber-500" />
               </div>
             </div>
-            <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">4.8</div>
-            <div className="text-xs font-medium text-amber-500">Based on 45 reviews</div>
+            <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">
+              {isLoading ? <Loader2 className="animate-spin h-6 w-6" /> : (analytics?.total_tasks_reviewed || 0)}
+            </div>
+            <div className="text-xs font-medium text-amber-500">Feedback delivered</div>
           </CardContent>
         </Card>
       </motion.div>

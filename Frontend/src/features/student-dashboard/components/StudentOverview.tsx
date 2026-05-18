@@ -1,4 +1,5 @@
-import { Layout, Trophy, TrendingUp, Clock, CheckCircle, Target, Award, Star, Shield } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Layout, Trophy, TrendingUp, Clock, CheckCircle, Target, Award, Star, Shield, Loader2 } from "lucide-react";
 import { motion } from "motion/react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
@@ -7,6 +8,7 @@ import { Progress } from "../../../components/ui/progress";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { JourneyTimeline } from "./JourneyTimeline";
 import { useAuthStore } from "../../../store/useAuthStore";
+import { api } from "../../../services/api.client";
 
 const skillProgressData = [
   { name: "Week 1", progress: 20 },
@@ -40,6 +42,25 @@ const fadeIn = {
 export function StudentOverview() {
   const { user } = useAuthStore();
   const currentLevel = user?.studentLevel || 'D';
+  
+  const [analytics, setAnalytics] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchAnalytics() {
+      try {
+        const res = await api.get('/analytics/student/me');
+        if (res.data.success) {
+          setAnalytics(res.data.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch student analytics", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchAnalytics();
+  }, []);
 
   // Helper to determine badge color based on level
   const getLevelColor = (level: string) => {
@@ -101,7 +122,9 @@ export function StudentOverview() {
                 <Target className="h-4 w-4 text-emerald-500" />
               </div>
             </div>
-            <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">94/100</div>
+            <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">
+              {isLoading ? <Loader2 className="animate-spin h-6 w-6" /> : `${analytics?.current_trust_score || 0}/100`}
+            </div>
             <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-500">
               <TrendingUp className="h-3.5 w-3.5" /> High Reliability
             </div>
@@ -135,8 +158,12 @@ export function StudentOverview() {
                 <CheckCircle className="h-4 w-4 text-blue-500" />
               </div>
             </div>
-            <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">12</div>
-            <div className="text-xs font-medium text-muted-foreground">85% completion rate</div>
+            <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">
+              {isLoading ? <Loader2 className="animate-spin h-6 w-6" /> : (analytics?.total_exams_taken || 0)}
+            </div>
+            <div className="text-xs font-medium text-muted-foreground">
+              Avg Score: {isLoading ? '-' : (analytics?.average_exam_score || 0)}%
+            </div>
           </CardContent>
         </Card>
       </motion.div>

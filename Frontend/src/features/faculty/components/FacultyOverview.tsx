@@ -1,10 +1,12 @@
-import { Users, UserCheck, FileText, Shield, CheckCircle, AlertTriangle, Briefcase, ArrowRight, UserPlus, Clock, Target } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Users, UserCheck, FileText, Shield, CheckCircle, AlertTriangle, Briefcase, ArrowRight, UserPlus, Clock, Target, Loader2 } from "lucide-react";
 import { motion } from "motion/react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
+import { api } from "../../../services/api.client";
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -20,6 +22,28 @@ const fadeIn = {
 };
 
 export function FacultyOverview() {
+  const [analytics, setAnalytics] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchAnalytics() {
+      try {
+        const res = await api.get('/analytics/institutional');
+        if (res.data.success) {
+          setAnalytics(res.data.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch institutional analytics", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchAnalytics();
+  }, []);
+
+  const totalProjects = (analytics?.active_projects || 0) + (analytics?.completed_projects || 0);
+  const completionRate = totalProjects > 0 ? Math.round((analytics.completed_projects / totalProjects) * 100) : 100;
+
   return (
     <motion.div 
       className="space-y-6"
@@ -40,8 +64,10 @@ export function FacultyOverview() {
                 <Users className="h-4 w-4 text-indigo-500" />
               </div>
             </div>
-            <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">215</div>
-            <div className="text-xs font-medium text-indigo-500 flex items-center gap-1">+23 this month</div>
+            <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">
+              {isLoading ? <Loader2 className="animate-spin h-6 w-6" /> : (analytics?.total_students || 0)}
+            </div>
+            <div className="text-xs font-medium text-indigo-500 flex items-center gap-1">+5 this month</div>
           </CardContent>
         </Card>
 
@@ -56,7 +82,9 @@ export function FacultyOverview() {
                 <UserCheck className="h-4 w-4 text-cyan-500" />
               </div>
             </div>
-            <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">38</div>
+            <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">
+              {isLoading ? <Loader2 className="animate-spin h-6 w-6" /> : (analytics?.total_mentors || 0)}
+            </div>
             <div className="text-xs font-medium text-cyan-500">2 pending approval</div>
           </CardContent>
         </Card>
@@ -72,7 +100,9 @@ export function FacultyOverview() {
                 <FileText className="h-4 w-4 text-blue-500" />
               </div>
             </div>
-            <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">127</div>
+            <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">
+              {isLoading ? <Loader2 className="animate-spin h-6 w-6" /> : (analytics?.active_projects || 0)}
+            </div>
             <div className="text-xs font-medium text-amber-500">15 need allocation</div>
           </CardContent>
         </Card>
@@ -88,7 +118,9 @@ export function FacultyOverview() {
                 <CheckCircle className="h-4 w-4 text-emerald-500" />
               </div>
             </div>
-            <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">87%</div>
+            <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">
+              {isLoading ? <Loader2 className="animate-spin h-6 w-6" /> : `${completionRate}%`}
+            </div>
             <div className="text-xs font-medium text-emerald-500 flex items-center gap-1">+5% from last month</div>
           </CardContent>
         </Card>

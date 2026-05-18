@@ -65,3 +65,36 @@ class Project(ProjectBase):
     tasks: List[Task] = []
     class Config:
         from_attributes = True
+
+# Team Member
+class TeamMemberBase(BaseModel):
+    pass
+
+class TeamMemberCreate(TeamMemberBase):
+    allocation_id: int
+    student_id: int
+
+class TeamMember(TeamMemberBase):
+    team_member_id: int
+    allocation_id: int
+    student_id: int
+    created_at: datetime
+    class Config:
+        from_attributes = True
+
+# Project Allocation
+class ProjectAllocationBase(BaseModel):
+    pass
+
+class ProjectAllocationCreate(ProjectAllocationBase):
+    project_id: int
+    mentor_id: int
+
+class ProjectAllocation(ProjectAllocationBase):
+    allocation_id: int
+    project_id: int
+    mentor_id: int
+    team_members: List[TeamMember] = []
+    created_at: datetime
+    class Config:
+        from_attributes = True
