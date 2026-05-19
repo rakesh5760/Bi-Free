@@ -125,8 +125,17 @@ export function StudentOverview() {
             <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">
               {isLoading ? <Loader2 className="animate-spin h-6 w-6" /> : `${analytics?.current_trust_score || 0}/100`}
             </div>
-            <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-500">
-              <TrendingUp className="h-3.5 w-3.5" /> High Reliability
+            <div className={`flex items-center gap-1.5 text-xs font-medium ${
+              (analytics?.current_trust_score || 0) >= 80 ? 'text-emerald-500' :
+              (analytics?.current_trust_score || 0) >= 50 ? 'text-blue-500' :
+              (analytics?.current_trust_score || 0) >= 20 ? 'text-yellow-500' :
+              'text-muted-foreground'
+            }`}>
+              <TrendingUp className="h-3.5 w-3.5" /> 
+              {(analytics?.current_trust_score || 0) >= 80 ? 'High Reliability' :
+               (analytics?.current_trust_score || 0) >= 50 ? 'Moderate Reliability' :
+               (analytics?.current_trust_score || 0) >= 20 ? 'Developing' :
+               'Needs Improvement'}
             </div>
           </CardContent>
         </Card>
@@ -175,25 +184,33 @@ export function StudentOverview() {
             <CardDescription>Your technical progression over the past 6 weeks</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={280}>
-              <LineChart data={skillProgressData} margin={{ top: 5, right: 20, bottom: 5, left: -20 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-muted" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} className="text-xs font-medium fill-muted-foreground" dy={10} />
-                <YAxis axisLine={false} tickLine={false} className="text-xs font-medium fill-muted-foreground" />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: 'hsl(var(--card))', borderRadius: '8px', border: '1px solid hsl(var(--border))', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  itemStyle={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="progress" 
-                  stroke="#4f46e5" 
-                  strokeWidth={3}
-                  dot={{ r: 4, strokeWidth: 2 }}
-                  activeDot={{ r: 6, strokeWidth: 0 }} 
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            {!analytics || analytics.total_exams_taken === 0 ? (
+              <div className="flex flex-col items-center justify-center h-[280px] text-center border-2 border-dashed border-border/50 rounded-xl bg-muted/20">
+                <Target className="h-10 w-10 text-muted-foreground mb-3 opacity-50" />
+                <p className="text-sm font-semibold text-muted-foreground">No data available yet</p>
+                <p className="text-xs text-muted-foreground mt-1 max-w-[200px]">Complete exams and assignments to track your progress.</p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={280}>
+                <LineChart data={skillProgressData} margin={{ top: 5, right: 20, bottom: 5, left: -20 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-muted" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} className="text-xs font-medium fill-muted-foreground" dy={10} />
+                  <YAxis axisLine={false} tickLine={false} className="text-xs font-medium fill-muted-foreground" />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: 'hsl(var(--card))', borderRadius: '8px', border: '1px solid hsl(var(--border))', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    itemStyle={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="progress" 
+                    stroke="#4f46e5" 
+                    strokeWidth={3}
+                    dot={{ r: 4, strokeWidth: 2 }}
+                    activeDot={{ r: 6, strokeWidth: 0 }} 
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
 
@@ -203,35 +220,44 @@ export function StudentOverview() {
             <CardDescription>Your expertise distributed across core tracks</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie
-                  data={skillDistribution}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={70}
-                  outerRadius={90}
-                  paddingAngle={5}
-                  dataKey="value"
-                  stroke="none"
-                >
-                  {skillDistribution.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+            {!analytics || analytics.total_exams_taken === 0 ? (
+              <div className="flex flex-col items-center justify-center h-[280px] text-center border-2 border-dashed border-border/50 rounded-xl bg-muted/20">
+                <Layout className="h-10 w-10 text-muted-foreground mb-3 opacity-50" />
+                <p className="text-sm font-semibold text-muted-foreground">No specialization data</p>
+              </div>
+            ) : (
+              <>
+                <ResponsiveContainer width="100%" height={280}>
+                  <PieChart>
+                    <Pie
+                      data={skillDistribution}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={70}
+                      outerRadius={90}
+                      paddingAngle={5}
+                      dataKey="value"
+                      stroke="none"
+                    >
+                      {skillDistribution.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: 'hsl(var(--card))', borderRadius: '8px', border: '1px solid hsl(var(--border))', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="flex flex-wrap justify-center gap-4 mt-2">
+                  {skillDistribution.map((item, i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                      <div className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
+                      {item.name} ({item.value}%)
+                    </div>
                   ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{ backgroundColor: 'hsl(var(--card))', borderRadius: '8px', border: '1px solid hsl(var(--border))', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="flex flex-wrap justify-center gap-4 mt-2">
-              {skillDistribution.map((item, i) => (
-                <div key={i} className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                  <div className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
-                  {item.name} ({item.value}%)
                 </div>
-              ))}
-            </div>
+              </>
+            )}
           </CardContent>
         </Card>
       </motion.div>
@@ -247,39 +273,46 @@ export function StudentOverview() {
               <Button variant="outline" size="sm">View All</Button>
             </CardHeader>
             <CardContent className="space-y-4 pt-4">
-              {[
-                { name: "SaaS Dashboard Redesign", client: "Acme Corp", progress: 75, status: "In Progress", deadline: "5 days", priority: "high" },
-                { name: "Auth API Integration", client: "TechFlow", progress: 90, status: "Mentor Review", deadline: "2 days", priority: "medium" },
-              ].map((project, i) => (
-                <div key={i} className="p-5 border border-border/50 rounded-xl hover:bg-muted/30 transition-colors bg-background/50">
-                  <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-4 gap-4">
-                    <div>
-                      <div className="font-bold text-foreground text-lg">{project.name}</div>
-                      <div className="text-sm font-medium text-muted-foreground flex items-center gap-2 mt-1">
-                        {project.client}
-                        <span className="h-1 w-1 rounded-full bg-muted-foreground" />
-                        <span className={`px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-bold ${project.priority === 'high' ? 'bg-orange-500/10 text-orange-500' : 'bg-blue-500/10 text-blue-500'}`}>
-                          {project.priority} priority
-                        </span>
+              {!analytics || analytics.total_projects_assigned === 0 ? (
+                <div className="p-8 text-center border-2 border-dashed border-border/50 rounded-xl bg-muted/20">
+                  <p className="text-sm font-semibold text-muted-foreground">You are not assigned to any projects</p>
+                  <Button variant="outline" className="mt-4 bg-background">Browse Qualifications</Button>
+                </div>
+              ) : (
+                [
+                  { name: "SaaS Dashboard Redesign", client: "Acme Corp", progress: 75, status: "In Progress", deadline: "5 days", priority: "high" },
+                  { name: "Auth API Integration", client: "TechFlow", progress: 90, status: "Mentor Review", deadline: "2 days", priority: "medium" },
+                ].map((project, i) => (
+                  <div key={i} className="p-5 border border-border/50 rounded-xl hover:bg-muted/30 transition-colors bg-background/50">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-4 gap-4">
+                      <div>
+                        <div className="font-bold text-foreground text-lg">{project.name}</div>
+                        <div className="text-sm font-medium text-muted-foreground flex items-center gap-2 mt-1">
+                          {project.client}
+                          <span className="h-1 w-1 rounded-full bg-muted-foreground" />
+                          <span className={`px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-bold ${project.priority === 'high' ? 'bg-orange-500/10 text-orange-500' : 'bg-blue-500/10 text-blue-500'}`}>
+                            {project.priority} priority
+                          </span>
+                        </div>
+                      </div>
+                      <Badge variant={project.status === "Mentor Review" ? "default" : "secondary"} className="w-max">
+                        {project.status}
+                      </Badge>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm font-medium">
+                        <span className="text-foreground">Execution Progress</span>
+                        <span className="text-primary">{project.progress}%</span>
+                      </div>
+                      <Progress value={project.progress} className="h-2.5 bg-muted/50" />
+                      <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground mt-2">
+                        <Clock className="h-3.5 w-3.5" />
+                        <span>Deadline in {project.deadline}</span>
                       </div>
                     </div>
-                    <Badge variant={project.status === "Mentor Review" ? "default" : "secondary"} className="w-max">
-                      {project.status}
-                    </Badge>
                   </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm font-medium">
-                      <span className="text-foreground">Execution Progress</span>
-                      <span className="text-primary">{project.progress}%</span>
-                    </div>
-                    <Progress value={project.progress} className="h-2.5 bg-muted/50" />
-                    <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground mt-2">
-                      <Clock className="h-3.5 w-3.5" />
-                      <span>Deadline in {project.deadline}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </CardContent>
           </Card>
         </div>
@@ -291,23 +324,29 @@ export function StudentOverview() {
               <CardDescription>Recent evaluations</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {[
-                { mentor: "Rajesh Kumar", role: "Senior Frontend", rating: 5, date: "2 days ago", comment: "Excellent component architecture. Clean code." },
-                { mentor: "Sarah Chen", role: "Backend Lead", rating: 4, date: "1 week ago", comment: "Good API design, but remember to add rate limiting." },
-              ].map((feedback, i) => (
-                <div key={i} className="p-4 border border-border/50 rounded-xl bg-background/50">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="font-bold text-sm">{feedback.mentor}</div>
-                    <div className="flex gap-0.5">
-                      {Array.from({ length: 5 }).map((_, j) => (
-                        <Star key={j} className={`h-3 w-3 ${j < feedback.rating ? 'fill-yellow-500 text-yellow-500' : 'text-muted'}`} />
-                      ))}
-                    </div>
-                  </div>
-                  <div className="text-xs font-medium text-muted-foreground mb-2">{feedback.role} • {feedback.date}</div>
-                  <p className="text-sm text-foreground/80 italic leading-relaxed">"{feedback.comment}"</p>
+              {!analytics || analytics.total_projects_assigned === 0 ? (
+                <div className="p-6 text-center border-2 border-dashed border-border/50 rounded-xl bg-muted/20">
+                  <p className="text-sm font-semibold text-muted-foreground">No feedback yet</p>
                 </div>
-              ))}
+              ) : (
+                [
+                  { mentor: "Rajesh Kumar", role: "Senior Frontend", rating: 5, date: "2 days ago", comment: "Excellent component architecture. Clean code." },
+                  { mentor: "Sarah Chen", role: "Backend Lead", rating: 4, date: "1 week ago", comment: "Good API design, but remember to add rate limiting." },
+                ].map((feedback, i) => (
+                  <div key={i} className="p-4 border border-border/50 rounded-xl bg-background/50">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="font-bold text-sm">{feedback.mentor}</div>
+                      <div className="flex gap-0.5">
+                        {Array.from({ length: 5 }).map((_, j) => (
+                          <Star key={j} className={`h-3 w-3 ${j < feedback.rating ? 'fill-yellow-500 text-yellow-500' : 'text-muted'}`} />
+                        ))}
+                      </div>
+                    </div>
+                    <div className="text-xs font-medium text-muted-foreground mb-2">{feedback.role} • {feedback.date}</div>
+                    <p className="text-sm text-foreground/80 italic leading-relaxed">"{feedback.comment}"</p>
+                  </div>
+                ))
+              )}
             </CardContent>
           </Card>
         </div>

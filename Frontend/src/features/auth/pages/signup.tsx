@@ -24,10 +24,8 @@ export default function SignupPage() {
     // Simulate API delay
     setTimeout(() => {
       setIsLoading(false);
-      // For demo purposes, we don't actually register them in MSW.
-      // We just route them to the onboarding flow where they can complete their profile.
-      navigate('/onboarding', { state: { role, email, name } });
-    }, 1000);
+      navigate('/onboarding', { state: { role, email, name, password } });
+    }, 500);
   };
 
   return (

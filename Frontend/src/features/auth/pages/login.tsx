@@ -162,7 +162,7 @@ export default function LoginPage() {
           </CardContent>
           <CardFooter className="flex flex-col space-y-4 border-t border-border/50 pt-4 mt-2">
             <div className="text-sm text-center text-muted-foreground">
-              Don't have an account? <a href="#" className="text-primary font-medium hover:underline">Sign up</a>
+              Don't have an account? <a href="#" onClick={(e) => { e.preventDefault(); navigate('/signup'); }} className="text-primary font-medium hover:underline">Sign up</a>
             </div>
             
             <div className="text-xs text-center text-muted-foreground bg-muted/50 p-2 rounded">

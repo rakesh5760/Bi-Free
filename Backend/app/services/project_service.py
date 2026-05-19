@@ -4,9 +4,45 @@ from fastapi import HTTPException, status
 from app.models.project import Project, ProjectStatus, Task, TaskStatus, QualityAssuranceSubmission, SubmissionStatus, ProjectAllocation, TeamMember
 from app.utils.logger import logger
 
+from app.models.profile import ClientProfile
+
 class ProjectService:
     def __init__(self, db: Session):
         self.db = db
+
+    def get_assigned_projects(self, user_id: int, role_name: str) -> List[Project]:
+        if role_name.lower() == 'student':
+            members = self.db.query(TeamMember).filter(TeamMember.student_id == user_id).all()
+            return [m.allocation.project for m in members if m.allocation]
+        elif role_name.lower() == 'mentor':
+            allocations = self.db.query(ProjectAllocation).filter(ProjectAllocation.mentor_id == user_id).all()
+            return [a.project for a in allocations]
+        elif role_name.lower() == 'client':
+            return self.db.query(Project).filter(Project.client_id == user_id).all()
+        return []
+
+    def get_project(self, project_id: int) -> Project:
+        project = self.db.query(Project).filter(Project.project_id == project_id).first()
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+        return project
+
+    def create_task(self, project_id: int, title: str, priority: str) -> Task:
+        project = self.get_project(project_id)
+        task = Task(project_id=project_id, title=title, priority=priority, status=TaskStatus.TO_DO)
+        self.db.add(task)
+        self.db.commit()
+        self.db.refresh(task)
+        return task
+
+    def update_task_status(self, task_id: int, status: TaskStatus) -> Task:
+        task = self.db.query(Task).filter(Task.task_id == task_id).first()
+        if not task:
+            raise HTTPException(status_code=404, detail="Task not found")
+        task.status = status
+        self.db.commit()
+        self.db.refresh(task)
+        return task
 
     def student_submit_task(self, student_id: int, task_id: int, github_pr_url: str) -> Task:
         """

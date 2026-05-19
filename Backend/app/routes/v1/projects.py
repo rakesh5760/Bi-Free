@@ -9,9 +9,61 @@ from app.auth.permissions import RoleChecker
 from app.models.user import User
 from app.utils.responses import success_response, StandardResponse
 from app.services.project_service import ProjectService
-from app.schemas.project import Project, Task, ProjectStatus
+from app.schemas.project import Project, Task, ProjectStatus, TaskStatus, TaskPriority
 
 router = APIRouter()
+
+@router.get("/assigned", response_model=StandardResponse[List[Project]])
+def get_assigned_projects(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+) -> Any:
+    """Get all projects assigned to the current user."""
+    svc = ProjectService(db)
+    projects = svc.get_assigned_projects(current_user.user_id, current_user.role.role_name)
+    return success_response(data=projects)
+
+@router.get("/{project_id}", response_model=StandardResponse[Project])
+def get_project(
+    project_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+) -> Any:
+    """Get project details including tasks."""
+    svc = ProjectService(db)
+    project = svc.get_project(project_id)
+    return success_response(data=project)
+
+class CreateTaskRequest(BaseModel):
+    title: str
+    priority: TaskPriority
+
+@router.post("/{project_id}/tasks", response_model=StandardResponse[Task])
+def create_project_task(
+    project_id: int,
+    request: CreateTaskRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+) -> Any:
+    """Create a new task in a project."""
+    svc = ProjectService(db)
+    task = svc.create_task(project_id, request.title, request.priority)
+    return success_response(data=task, message="Task created successfully.")
+
+class UpdateTaskStatusRequest(BaseModel):
+    status: TaskStatus
+
+@router.patch("/tasks/{task_id}/status", response_model=StandardResponse[Task])
+def update_task_status(
+    task_id: int,
+    request: UpdateTaskStatusRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+) -> Any:
+    """Update a task's status (e.g. move from TO_DO to IN_PROGRESS)."""
+    svc = ProjectService(db)
+    task = svc.update_task_status(task_id, request.status)
+    return success_response(data=task, message=f"Task moved to {request.status}.")
 
 student_checker = RoleChecker(["Student"])
 mentor_checker = RoleChecker(["Mentor", "Faculty", "Admin"])

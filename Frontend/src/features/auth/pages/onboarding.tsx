@@ -14,7 +14,7 @@ export default function OnboardingPage() {
   const { login } = useAuthStore();
   
   // State from signup
-  const { role = 'student', email = '', name = '' } = location.state || {};
+  const { role = 'student', email = '', name = '', password = '' } = location.state || {};
 
   const [step, setStep] = useState(1);
   const [domain, setDomain] = useState('');
@@ -31,17 +31,39 @@ export default function OnboardingPage() {
     setIsLoading(true);
     
     try {
-      // Simulate completing onboarding and actually authenticating
-      // Since MSW expects specific demo emails, we will map them here just for the demo.
-      const loginEmail = role === 'student' ? 'alex@student.edu' : 'client@skillforge.edu';
+      const nameParts = name.trim().split(' ');
+      const firstName = nameParts[0] || 'Unknown';
+      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : 'User';
+
+      const registerPayload = {
+        email: email,
+        password: password,
+        first_name: firstName,
+        last_name: lastName,
+        role: role,
+        domain: domain || undefined,
+        company_name: companyName || undefined
+      };
+
+      const tokenResponse = await api.post('/auth/register', registerPayload);
+      const token = tokenResponse.data.access_token;
+
+      // Fetch user profile
+      const userResponse = await api.get('/users/me', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const userData = userResponse.data.data;
       
-      const response = await api.post('/auth/login', { email: loginEmail, password: 'password' });
-      const { user, token } = response.data;
+      const mappedRole = userData.role?.role_name?.toLowerCase() || 'student';
+      const mappedUser = {
+        id: userData.user_id.toString(),
+        name: `${userData.first_name} ${userData.last_name}`,
+        email: userData.email,
+        role: mappedRole,
+        studentLevel: userData.student_profile?.level?.name?.replace('Level ', '') || null
+      };
       
-      // Override the user name with what they typed in signup just for UX feeling
-      const finalUser = { ...user, name: name || user.name };
-      
-      login(finalUser, token);
+      login(mappedUser as any, token);
       
       navigate(role === 'student' ? '/student' : '/client', { replace: true });
     } catch (err) {

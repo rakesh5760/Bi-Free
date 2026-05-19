@@ -16,6 +16,15 @@ class UserBase(BaseModel):
     last_name: Optional[str] = None
     is_active: Optional[bool] = True
 
+class RegisterRequest(BaseModel):
+    email: EmailStr
+    password: str
+    first_name: str
+    last_name: str
+    role: str
+    domain: Optional[str] = None
+    company_name: Optional[str] = None
+
 class UserCreate(UserBase):
     email: EmailStr
     first_name: str

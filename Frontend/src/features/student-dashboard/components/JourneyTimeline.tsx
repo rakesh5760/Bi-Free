@@ -48,12 +48,12 @@ export function JourneyTimeline({ currentLevel }: JourneyTimelineProps) {
         
         <div className="relative">
           {/* Connecting Line Background */}
-          <div className="absolute top-6 left-[10%] right-[10%] h-1 bg-muted rounded-full -z-10 hidden md:block" />
+          <div className="absolute top-6 h-1 bg-muted rounded-full -z-10 hidden md:block" style={{ left: '12.5%', width: '75%' }} />
           
           {/* Active Connecting Line */}
           <div 
-            className="absolute top-6 left-[10%] h-1 bg-primary rounded-full transition-all duration-1000 -z-10 hidden md:block" 
-            style={{ width: `${Math.min((currentIndex / 3) * 80 + 10, 90)}%` }} 
+            className="absolute top-6 h-1 bg-primary rounded-full transition-all duration-1000 -z-10 hidden md:block" 
+            style={{ left: '12.5%', width: `${(currentIndex / 3) * 75}%` }} 
           />
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative z-10">

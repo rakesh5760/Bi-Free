@@ -5,9 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../..
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Avatar, AvatarFallback } from "../../components/ui/avatar";
-import { DashboardLayout } from "../../layouts/DashboardLayout";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../components/ui/dropdown-menu";
-import { ProjectSidebar } from "./components/ProjectSidebar";
+import { DashboardLayout } from "../../layouts/DashboardLayout";
+import { StudentSidebar } from "../student-dashboard/components/StudentSidebar";
+import { MentorSidebar } from "../mentor/components/MentorSidebar";
+import { NewIssueModal } from "./components/NewIssueModal";
+import { api } from "../../services/api.client";
+import { useEffect } from "react";
+import { useAuthStore } from "../../store/useAuthStore";
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -23,55 +28,101 @@ const fadeIn = {
 };
 
 export default function ProjectManagement() {
-  const [selectedProject] = useState("E-commerce Platform");
+  const { user } = useAuthStore();
+  const Sidebar = user?.role === 'mentor' ? MentorSidebar : StudentSidebar;
 
-  const columns = [
-    {
-      title: "To Do",
-      color: "border-blue-500",
-      bg: "bg-blue-500/5",
-      icon: CircleDot,
-      iconColor: "text-blue-500",
-      tasks: [
-        { id: "ENG-101", title: "Design homepage mockup", assignee: "PS", priority: "high", comments: 3, attachments: 2, pr: null },
-        { id: "ENG-102", title: "Set up database schema", assignee: "VR", priority: "high", comments: 1, attachments: 0, pr: null },
-        { id: "ENG-103", title: "Create API documentation", assignee: "AP", priority: "medium", comments: 0, attachments: 1, pr: null },
-      ]
-    },
-    {
-      title: "In Progress",
-      color: "border-yellow-500",
-      bg: "bg-yellow-500/5",
-      icon: Play,
-      iconColor: "text-yellow-500",
-      tasks: [
-        { id: "ENG-98", title: "Implement user authentication", assignee: "RS", priority: "high", comments: 5, attachments: 1, pr: { status: "open", id: "#42" } },
-        { id: "ENG-95", title: "Build product listing page", assignee: "PS", priority: "medium", comments: 2, attachments: 3, pr: { status: "draft", id: "#44" } },
-      ]
-    },
-    {
-      title: "Mentor Review",
-      color: "border-purple-500",
-      bg: "bg-purple-500/5",
-      icon: AlertCircle,
-      iconColor: "text-purple-500",
-      tasks: [
-        { id: "ENG-88", title: "Shopping cart functionality", assignee: "VR", priority: "high", comments: 4, attachments: 2, pr: { status: "review", id: "#38" } },
-        { id: "ENG-85", title: "Payment gateway integration", assignee: "AP", priority: "high", comments: 6, attachments: 1, pr: { status: "review", id: "#39" } },
-      ]
-    },
-    {
-      title: "Done",
-      color: "border-emerald-500",
-      bg: "bg-emerald-500/5",
-      icon: CheckCircle,
-      iconColor: "text-emerald-500",
-      tasks: [
-        { id: "ENG-72", title: "Project setup & config", assignee: "RS", priority: "medium", comments: 2, attachments: 0, pr: { status: "merged", id: "#12" } },
-        { id: "ENG-70", title: "Logo and branding assets", assignee: "PS", priority: "low", comments: 1, attachments: 5, pr: null },
-      ]
-    },
-  ];
+  const [projects, setProjects] = useState<any[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
+  const [projectDetails, setProjectDetails] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchProjects = async () => {
+    try {
+      const res = await api.get('/projects/assigned');
+      if (res.data.success && res.data.data.length > 0) {
+        setProjects(res.data.data);
+        setSelectedProjectId(res.data.data[0].project_id);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchProjectDetails = async (id: number) => {
+    try {
+      const res = await api.get(`/projects/${id}`);
+      if (res.data.success) {
+        setProjectDetails(res.data.data);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  useEffect(() => {
+    if (selectedProjectId) {
+      fetchProjectDetails(selectedProjectId);
+    }
+  }, [selectedProjectId]);
+
+  const updateTaskStatus = async (taskId: number, status: string) => {
+    try {
+      await api.patch(`/projects/tasks/${taskId}/status`, { status });
+      if (selectedProjectId) fetchProjectDetails(selectedProjectId);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const getColumns = () => {
+    const tasks = projectDetails?.tasks || [];
+    return [
+      {
+        title: "To Do",
+        statusKey: "To Do",
+        color: "border-blue-500",
+        bg: "bg-blue-500/5",
+        icon: CircleDot,
+        iconColor: "text-blue-500",
+        tasks: tasks.filter((t: any) => t.status === "To Do")
+      },
+      {
+        title: "In Progress",
+        statusKey: "In Progress",
+        color: "border-yellow-500",
+        bg: "bg-yellow-500/5",
+        icon: Play,
+        iconColor: "text-yellow-500",
+        tasks: tasks.filter((t: any) => t.status === "In Progress")
+      },
+      {
+        title: "Review",
+        statusKey: "Review",
+        color: "border-purple-500",
+        bg: "bg-purple-500/5",
+        icon: AlertCircle,
+        iconColor: "text-purple-500",
+        tasks: tasks.filter((t: any) => t.status === "Review")
+      },
+      {
+        title: "Done",
+        statusKey: "Done",
+        color: "border-emerald-500",
+        bg: "bg-emerald-500/5",
+        icon: CheckCircle,
+        iconColor: "text-emerald-500",
+        tasks: tasks.filter((t: any) => t.status === "Done")
+      },
+    ];
+  };
+
+  const columns = getColumns();
 
   const teamMembers = [
     { name: "Priya Sharma", initials: "PS", role: "Frontend Lead", active: true },
@@ -81,20 +132,40 @@ export default function ProjectManagement() {
   ];
 
   return (
-    <DashboardLayout sidebar={<ProjectSidebar />} title="Project Execution">
-      <motion.div 
-        className="space-y-6"
-        variants={staggerContainer}
-        initial="hidden"
-        animate="visible"
-      >
-        <motion.div variants={fadeIn} className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card/50 backdrop-blur-sm p-6 rounded-xl border border-border/50 shadow-sm">
+    <DashboardLayout sidebar={<Sidebar />} title="Project Execution">
+      {!loading && projects.length === 0 ? (
+        <motion.div variants={fadeIn} className="flex flex-col items-center justify-center py-24 px-4 text-center">
+          <div className="h-20 w-20 bg-primary/10 rounded-full flex items-center justify-center mb-6">
+            <CircleDot className="h-10 w-10 text-primary opacity-50" />
+          </div>
+          <h3 className="text-2xl font-extrabold tracking-tight mb-2">No Projects Assigned</h3>
+          <p className="text-muted-foreground max-w-md mx-auto">
+            You haven't been assigned to any projects yet. Please wait for a mentor to allocate you to a team, or complete your prerequisite learning modules.
+          </p>
+        </motion.div>
+      ) : (
+        <motion.div 
+          className="space-y-6"
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+        >
+          <motion.div variants={fadeIn} className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card/50 backdrop-blur-sm p-6 rounded-xl border border-border/50 shadow-sm">
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <Badge variant="outline" className="text-[10px] uppercase tracking-wider font-bold shadow-sm">TechStart Inc</Badge>
-              <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1"><Clock className="h-3 w-3" /> Due May 18, 2026</span>
+              {projects.length > 1 && (
+                <select 
+                  className="bg-background border rounded px-2 py-1 text-sm font-medium"
+                  value={selectedProjectId || ""}
+                  onChange={(e) => setSelectedProjectId(Number(e.target.value))}
+                >
+                  {projects.map(p => <option key={p.project_id} value={p.project_id}>{p.title}</option>)}
+                </select>
+              )}
+              {projectDetails?.domain && <Badge variant="outline" className="text-[10px] uppercase tracking-wider font-bold shadow-sm">{projectDetails.domain.name}</Badge>}
+              {projectDetails?.deadline && <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1"><Clock className="h-3 w-3" /> Due {new Date(projectDetails.deadline).toLocaleDateString()}</span>}
             </div>
-            <h2 className="text-2xl font-extrabold tracking-tight text-foreground">{selectedProject}</h2>
+            <h2 className="text-2xl font-extrabold tracking-tight text-foreground">{projectDetails?.title || "Loading Project..."}</h2>
           </div>
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex -space-x-3">
@@ -107,10 +178,9 @@ export default function ProjectManagement() {
               ))}
             </div>
             <div className="h-8 w-px bg-border/50 hidden md:block" />
-            <Button className="font-bold bg-foreground text-background hover:bg-foreground/90 shadow-md h-10 px-5">
-              <Plus className="mr-2 h-4 w-4" />
-              New Issue
-            </Button>
+            {selectedProjectId && (
+              <NewIssueModal projectId={selectedProjectId} onIssueCreated={() => fetchProjectDetails(selectedProjectId)} />
+            )}
           </div>
         </motion.div>
 
@@ -139,7 +209,7 @@ export default function ProjectManagement() {
                       <Card className="hover:border-foreground/30 hover:shadow-md transition-all cursor-pointer bg-card/80 backdrop-blur-sm border-border/50 group">
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between mb-2">
-                            <span className="text-[10px] font-bold text-muted-foreground uppercase">{task.id}</span>
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase">TASK-{task.task_id}</span>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -147,8 +217,10 @@ export default function ProjectManagement() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem>Edit Issue</DropdownMenuItem>
-                                <DropdownMenuItem>Copy Link</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => updateTaskStatus(task.task_id, 'To Do')} disabled={task.status === 'To Do'}>Move to To Do</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => updateTaskStatus(task.task_id, 'In Progress')} disabled={task.status === 'In Progress'}>Move to In Progress</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => updateTaskStatus(task.task_id, 'Review')} disabled={task.status === 'Review'}>Move to Review</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => updateTaskStatus(task.task_id, 'Done')} disabled={task.status === 'Done'}>Move to Done</DropdownMenuItem>
                                 <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -161,12 +233,12 @@ export default function ProjectManagement() {
                               variant="outline"
                               className={`
                                 text-[9px] uppercase tracking-wider font-bold border
-                                ${task.priority === "high" ? "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20" : ""}
-                                ${task.priority === "medium" ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20" : ""}
-                                ${task.priority === "low" ? "bg-muted/50 text-muted-foreground border-border/50" : ""}
+                                ${task.priority?.toLowerCase() === "high" ? "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20" : ""}
+                                ${task.priority?.toLowerCase() === "medium" ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20" : ""}
+                                ${task.priority?.toLowerCase() === "low" ? "bg-muted/50 text-muted-foreground border-border/50" : ""}
                               `}
                             >
-                              {task.priority} Priority
+                              {task.priority || 'Medium'} Priority
                             </Badge>
 
                             {task.pr && (
@@ -204,15 +276,20 @@ export default function ProjectManagement() {
                   ))}
                 </AnimatePresence>
                 
-                <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:bg-muted/50 font-semibold text-sm border border-dashed border-border/50 bg-transparent" size="sm">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create Issue
-                </Button>
+                {selectedProjectId && (
+                  <NewIssueModal projectId={selectedProjectId} onIssueCreated={() => fetchProjectDetails(selectedProjectId)}>
+                    <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:bg-muted/50 font-semibold text-sm border border-dashed border-border/50 bg-transparent" size="sm">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Create Issue
+                    </Button>
+                  </NewIssueModal>
+                )}
               </div>
             </div>
           ))}
         </motion.div>
       </motion.div>
+      )}
     </DashboardLayout>
   );
 }
