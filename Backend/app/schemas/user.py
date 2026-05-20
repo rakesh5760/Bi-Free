@@ -14,6 +14,7 @@ class UserBase(BaseModel):
     email: Optional[EmailStr] = None
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+    phone_number: Optional[str] = None
     is_active: Optional[bool] = True
 
 class RegisterRequest(BaseModel):
@@ -52,3 +53,31 @@ class User(UserInDBBase):
 
 class UserInDB(UserInDBBase):
     password_hash: str
+
+# ── Profile update / response schemas ────────────────────────
+class UserProfileUpdate(BaseModel):
+    """Fields a user can update on their own profile."""
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    phone_number: Optional[str] = None
+    # Student-specific (ignored for non-students)
+    github_handle: Optional[str] = None
+    portfolio_url: Optional[str] = None
+
+class UserProfileResponse(BaseModel):
+    """Combined user + student-profile data returned by the profile endpoints."""
+    user_id: int
+    first_name: str
+    last_name: str
+    email: str
+    phone_number: Optional[str] = None
+    role: str
+    # Student-specific fields (None for non-students)
+    github_handle: Optional[str] = None
+    portfolio_url: Optional[str] = None
+    trust_score: Optional[float] = None
+    student_level: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+

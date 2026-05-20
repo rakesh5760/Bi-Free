@@ -4,9 +4,11 @@ import { Card, CardContent } from "../../../components/ui/card";
 
 interface JourneyTimelineProps {
   currentLevel: StudentLevel;
+  onEvaluate?: () => void;
+  isEvaluating?: boolean;
 }
 
-export function JourneyTimeline({ currentLevel }: JourneyTimelineProps) {
+export function JourneyTimeline({ currentLevel, onEvaluate, isEvaluating }: JourneyTimelineProps) {
   // Map levels to numeric indices for easier progression comparison
   const levelOrder: Record<NonNullable<StudentLevel>, number> = { D: 0, C: 1, B: 2, A: 3 };
   const currentIndex = currentLevel ? levelOrder[currentLevel] : 0;
@@ -82,8 +84,19 @@ export function JourneyTimeline({ currentLevel }: JourneyTimelineProps) {
                   </div>
                   
                   {isActive && (
-                    <div className="mt-2 text-[10px] uppercase tracking-wider font-bold text-primary bg-primary/10 px-2 py-1 rounded-full animate-pulse">
-                      Current Phase
+                    <div className="flex flex-col items-center gap-1 mt-2">
+                      <div className="text-[10px] uppercase tracking-wider font-bold text-primary bg-primary/10 px-2 py-1 rounded-full animate-pulse">
+                        Current Phase
+                      </div>
+                      {onEvaluate && (
+                        <button
+                          onClick={onEvaluate}
+                          disabled={isEvaluating}
+                          className="text-[10px] font-bold text-primary hover:underline transition-all disabled:opacity-50"
+                        >
+                          Check Eligibility
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>

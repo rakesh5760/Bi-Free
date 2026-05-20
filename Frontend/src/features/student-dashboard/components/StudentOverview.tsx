@@ -7,8 +7,9 @@ import { Button } from "../../../components/ui/button";
 import { Progress } from "../../../components/ui/progress";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { JourneyTimeline } from "./JourneyTimeline";
-import { useAuthStore } from "../../../store/useAuthStore";
+import { useAuthStore, StudentLevel } from "../../../store/useAuthStore";
 import { api } from "../../../services/api.client";
+import { toast } from "sonner";
 
 const skillProgressData = [
   { name: "Week 1", progress: 20 },
@@ -40,11 +41,16 @@ const fadeIn = {
 };
 
 export function StudentOverview() {
-  const { user } = useAuthStore();
+  const { user, updateUser } = useAuthStore();
   const currentLevel = user?.studentLevel || 'D';
   
   const [analytics, setAnalytics] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [assignedProjects, setAssignedProjects] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [isProjectsLoading, setIsProjectsLoading] = useState(true);
+  const [isReviewsLoading, setIsReviewsLoading] = useState(true);
+  const [isEvaluating, setIsEvaluating] = useState(false);
 
   useEffect(() => {
     async function fetchAnalytics() {
@@ -59,8 +65,60 @@ export function StudentOverview() {
         setIsLoading(false);
       }
     }
+
+    async function fetchProjects() {
+      try {
+        const res = await api.get('/projects/assigned');
+        if (res.data.success) {
+          setAssignedProjects(res.data.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch assigned projects", err);
+      } finally {
+        setIsProjectsLoading(false);
+      }
+    }
+
+    async function fetchReviews() {
+      try {
+        const res = await api.get('/reputation/me/reviews');
+        if (res.data.success) {
+          setReviews(res.data.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch student reviews", err);
+      } finally {
+        setIsReviewsLoading(false);
+      }
+    }
+
     fetchAnalytics();
+    fetchProjects();
+    fetchReviews();
   }, []);
+
+  const handleCheckProgression = async () => {
+    setIsEvaluating(true);
+    try {
+      const res = await api.post('/students/me/evaluate-progression');
+      if (res.data.success) {
+        const data = res.data.data;
+        toast.success(res.data.message || "Progression evaluated successfully.");
+        if (data.promoted && data.eligible_level) {
+          const levelCode = data.eligible_level.split(" ").pop() as StudentLevel;
+          updateUser({ studentLevel: levelCode });
+        }
+      } else {
+        toast.error(res.data.message || "Progression check failed.");
+      }
+    } catch (err: any) {
+      console.error(err);
+      const errMsg = err.response?.data?.message || "An error occurred during evaluation.";
+      toast.error(errMsg);
+    } finally {
+      setIsEvaluating(false);
+    }
+  };
 
   // Helper to determine badge color based on level
   const getLevelColor = (level: string) => {
@@ -89,7 +147,11 @@ export function StudentOverview() {
       animate="visible"
     >
       <motion.div variants={fadeIn}>
-        <JourneyTimeline currentLevel={currentLevel} />
+        <JourneyTimeline 
+          currentLevel={currentLevel} 
+          onEvaluate={handleCheckProgression} 
+          isEvaluating={isEvaluating} 
+        />
       </motion.div>
 
       <motion.div variants={fadeIn} className="grid gap-6 md:grid-cols-4">
@@ -105,9 +167,21 @@ export function StudentOverview() {
               </div>
             </div>
             <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">Level {currentLevel}</div>
-            <Badge className={`border px-2.5 py-0.5 rounded-full font-medium ${getLevelColor(currentLevel)} hover:${getLevelColor(currentLevel)}`}>
-              {getLevelTitle(currentLevel)}
-            </Badge>
+            <div className="flex items-center justify-between gap-2">
+              <Badge className={`border px-2.5 py-0.5 rounded-full font-medium ${getLevelColor(currentLevel)} hover:${getLevelColor(currentLevel)}`}>
+                {getLevelTitle(currentLevel)}
+              </Badge>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleCheckProgression} 
+                disabled={isEvaluating}
+                className="h-7 text-xs font-semibold px-2 hover:bg-primary hover:text-white transition-all"
+              >
+                {isEvaluating ? <Loader2 className="animate-spin h-3 w-3 mr-1" /> : <Trophy className="h-3.5 w-3.5 mr-1" />}
+                Evaluate
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
@@ -151,8 +225,12 @@ export function StudentOverview() {
                 <Layout className="h-4 w-4 text-violet-500" />
               </div>
             </div>
-            <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">2</div>
-            <div className="text-xs font-medium text-muted-foreground">1 pending client review</div>
+            <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">
+              {isProjectsLoading ? <Loader2 className="animate-spin h-6 w-6" /> : assignedProjects.length}
+            </div>
+            <div className="text-xs font-medium text-muted-foreground">
+              {isProjectsLoading ? '-' : `${assignedProjects.filter(p => p.status === 'Mentor QA').length} pending review`}
+            </div>
           </CardContent>
         </Card>
 
@@ -273,45 +351,61 @@ export function StudentOverview() {
               <Button variant="outline" size="sm">View All</Button>
             </CardHeader>
             <CardContent className="space-y-4 pt-4">
-              {!analytics || analytics.total_projects_assigned === 0 ? (
-                <div className="p-8 text-center border-2 border-dashed border-border/50 rounded-xl bg-muted/20">
-                  <p className="text-sm font-semibold text-muted-foreground">You are not assigned to any projects</p>
-                  <Button variant="outline" className="mt-4 bg-background">Browse Qualifications</Button>
+              {isProjectsLoading ? (
+                <div className="flex items-center justify-center p-8">
+                  <Loader2 className="animate-spin h-6 w-6 text-primary" />
                 </div>
               ) : (
-                [
-                  { name: "SaaS Dashboard Redesign", client: "Acme Corp", progress: 75, status: "In Progress", deadline: "5 days", priority: "high" },
-                  { name: "Auth API Integration", client: "TechFlow", progress: 90, status: "Mentor Review", deadline: "2 days", priority: "medium" },
-                ].map((project, i) => (
-                  <div key={i} className="p-5 border border-border/50 rounded-xl hover:bg-muted/30 transition-colors bg-background/50">
-                    <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-4 gap-4">
-                      <div>
-                        <div className="font-bold text-foreground text-lg">{project.name}</div>
-                        <div className="text-sm font-medium text-muted-foreground flex items-center gap-2 mt-1">
-                          {project.client}
-                          <span className="h-1 w-1 rounded-full bg-muted-foreground" />
-                          <span className={`px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-bold ${project.priority === 'high' ? 'bg-orange-500/10 text-orange-500' : 'bg-blue-500/10 text-blue-500'}`}>
-                            {project.priority} priority
-                          </span>
+                assignedProjects.length === 0 ? (
+                  <div className="p-8 text-center border-2 border-dashed border-border/50 rounded-xl bg-muted/20">
+                    <p className="text-sm font-semibold text-muted-foreground">You are not assigned to any projects</p>
+                    <Button variant="outline" className="mt-4 bg-background">Browse Qualifications</Button>
+                  </div>
+                ) : (
+                  assignedProjects.map((p, i) => {
+                    const totalTasks = p.tasks?.length || 0;
+                    const completedTasks = p.tasks?.filter((t: any) => t.status === "Done")?.length || 0;
+                    const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+                    const project = {
+                      name: p.title,
+                      client: p.domain?.name || "Client project",
+                      progress,
+                      status: p.status,
+                      deadline: p.deadline ? new Date(p.deadline).toLocaleDateString() : "Flexible",
+                      priority: "medium"
+                    };
+                    return (
+                      <div key={i} className="p-5 border border-border/50 rounded-xl hover:bg-muted/30 transition-colors bg-background/50">
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-4 gap-4">
+                          <div>
+                            <div className="font-bold text-foreground text-lg">{project.name}</div>
+                            <div className="text-sm font-medium text-muted-foreground flex items-center gap-2 mt-1">
+                              {project.client}
+                              <span className="h-1 w-1 rounded-full bg-muted-foreground" />
+                              <span className={`px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-bold bg-blue-500/10 text-blue-500`}>
+                                {project.priority} priority
+                              </span>
+                            </div>
+                          </div>
+                          <Badge variant={project.status === "Mentor QA" ? "default" : "secondary"} className="w-max">
+                            {project.status}
+                          </Badge>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-sm font-medium">
+                            <span className="text-foreground">Execution Progress</span>
+                            <span className="text-primary">{project.progress}%</span>
+                          </div>
+                          <Progress value={project.progress} className="h-2.5 bg-muted/50" />
+                          <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground mt-2">
+                            <Clock className="h-3.5 w-3.5" />
+                            <span>Deadline: {project.deadline}</span>
+                          </div>
                         </div>
                       </div>
-                      <Badge variant={project.status === "Mentor Review" ? "default" : "secondary"} className="w-max">
-                        {project.status}
-                      </Badge>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm font-medium">
-                        <span className="text-foreground">Execution Progress</span>
-                        <span className="text-primary">{project.progress}%</span>
-                      </div>
-                      <Progress value={project.progress} className="h-2.5 bg-muted/50" />
-                      <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground mt-2">
-                        <Clock className="h-3.5 w-3.5" />
-                        <span>Deadline in {project.deadline}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))
+                    );
+                  })
+                )
               )}
             </CardContent>
           </Card>
@@ -324,28 +418,41 @@ export function StudentOverview() {
               <CardDescription>Recent evaluations</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {!analytics || analytics.total_projects_assigned === 0 ? (
-                <div className="p-6 text-center border-2 border-dashed border-border/50 rounded-xl bg-muted/20">
-                  <p className="text-sm font-semibold text-muted-foreground">No feedback yet</p>
+              {isReviewsLoading ? (
+                <div className="flex items-center justify-center p-8">
+                  <Loader2 className="animate-spin h-6 w-6 text-primary" />
                 </div>
               ) : (
-                [
-                  { mentor: "Rajesh Kumar", role: "Senior Frontend", rating: 5, date: "2 days ago", comment: "Excellent component architecture. Clean code." },
-                  { mentor: "Sarah Chen", role: "Backend Lead", rating: 4, date: "1 week ago", comment: "Good API design, but remember to add rate limiting." },
-                ].map((feedback, i) => (
-                  <div key={i} className="p-4 border border-border/50 rounded-xl bg-background/50">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="font-bold text-sm">{feedback.mentor}</div>
-                      <div className="flex gap-0.5">
-                        {Array.from({ length: 5 }).map((_, j) => (
-                          <Star key={j} className={`h-3 w-3 ${j < feedback.rating ? 'fill-yellow-500 text-yellow-500' : 'text-muted'}`} />
-                        ))}
-                      </div>
-                    </div>
-                    <div className="text-xs font-medium text-muted-foreground mb-2">{feedback.role} • {feedback.date}</div>
-                    <p className="text-sm text-foreground/80 italic leading-relaxed">"{feedback.comment}"</p>
+                reviews.length === 0 ? (
+                  <div className="p-6 text-center border-2 border-dashed border-border/50 rounded-xl bg-muted/20">
+                    <p className="text-sm font-semibold text-muted-foreground">No feedback yet</p>
                   </div>
-                ))
+                ) : (
+                  reviews.map((r, i) => {
+                    const avgRating = Math.round((r.professionalism_score + r.reliability_score + r.communication_score) / 3);
+                    const feedback = {
+                      mentor: r.reviewer_type === 'Mentor' ? "Mentor Feedback" : "Client Feedback",
+                      role: r.reviewer_type,
+                      rating: avgRating,
+                      date: r.created_at ? new Date(r.created_at).toLocaleDateString() : "Recent",
+                      comment: r.feedback
+                    };
+                    return (
+                      <div key={i} className="p-4 border border-border/50 rounded-xl bg-background/50">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="font-bold text-sm">{feedback.mentor}</div>
+                          <div className="flex gap-0.5">
+                            {Array.from({ length: 5 }).map((_, j) => (
+                              <Star key={j} className={`h-3 w-3 ${j < feedback.rating ? 'fill-yellow-500 text-yellow-500' : 'text-muted'}`} />
+                            ))}
+                          </div>
+                        </div>
+                        <div className="text-xs font-medium text-muted-foreground mb-2">{feedback.role} • {feedback.date}</div>
+                        <p className="text-sm text-foreground/80 italic leading-relaxed">"{feedback.comment}"</p>
+                      </div>
+                    );
+                  })
+                )
               )}
             </CardContent>
           </Card>

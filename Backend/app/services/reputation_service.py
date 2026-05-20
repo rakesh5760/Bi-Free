@@ -55,11 +55,17 @@ class ReputationService:
             # Simple average of the 3 averages
             new_trust_score = (float(metrics.avg_prof) + float(metrics.avg_rel) + float(metrics.avg_comm)) / 3.0
             
-            # Optionally scale it if trust_score is 0-100 instead of 1-5
-            # new_trust_score = new_trust_score * 20.0
+            # Scale it since trust_score is 0-100 instead of 1-5
+            new_trust_score = new_trust_score * 20.0
             
             student.trust_score = round(new_trust_score, 2)
             self.db.commit()
             return student.trust_score
         
         return float(student.trust_score)
+
+    def get_reviews(self, student_id: int) -> list[StudentReview]:
+        """
+        Get all reviews received by a student.
+        """
+        return self.db.query(StudentReview).filter(StudentReview.student_id == student_id).all()

@@ -21,7 +21,9 @@ class User(Base, TimestampMixin, SoftDeleteMixin):
     last_name = Column(String(100), nullable=False)
     email = Column(String(255), unique=True, index=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
+    phone_number = Column(String(20), nullable=True)
     is_active = Column(Boolean, default=True, index=True)
+
 
     role = relationship("Role", back_populates="users")
     

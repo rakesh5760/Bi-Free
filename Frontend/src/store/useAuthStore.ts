@@ -17,6 +17,7 @@ interface User {
   email: string;
   role: UserRole;
   avatarUrl?: string;
+  phone_number?: string;
   studentLevel?: StudentLevel; // Only for students
   reputation?: ReputationMetrics; // Faculty and Mentors can view this
 }

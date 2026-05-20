@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
 import { GraduationCap, ArrowRight, Loader2, Code, Building, User } from 'lucide-react';
@@ -7,9 +7,17 @@ import { Input } from '../../../components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../../components/ui/card';
 import { RadioGroup, RadioGroupItem } from '../../../components/ui/radio-group';
 import { Label } from '../../../components/ui/label';
+import { useAuthStore } from '../../../store/useAuthStore';
 
 export default function SignupPage() {
   const navigate = useNavigate();
+  const { isAuthenticated, logout } = useAuthStore();
+  
+  useEffect(() => {
+    if (isAuthenticated) {
+      logout();
+    }
+  }, [isAuthenticated, logout]);
   
   const [role, setRole] = useState<'student' | 'client'>('student');
   const [name, setName] = useState('');

@@ -6,12 +6,20 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.core.config import settings
 from app.routes.v1 import auth, users, students, learning, exams, faculty, mentors, clients, projects, reputation, analytics
 from app.utils.exceptions import validation_exception_handler, http_exception_handler, global_exception_handler
+from app.database.session import Base, engine, safe_migrate
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
+
+@app.on_event("startup")
+def on_startup():
+    # Create any new tables and apply safe additive column migrations
+    Base.metadata.create_all(bind=engine)
+    safe_migrate()
+
 
 # Set all CORS enabled origins
 app.add_middleware(

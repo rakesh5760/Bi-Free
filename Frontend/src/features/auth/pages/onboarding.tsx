@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
-import { Code, Database, Layout, Laptop, ArrowRight, ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
+import { Code, Database, Layout, Laptop, ArrowRight, ArrowLeft, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../../components/ui/card';
@@ -20,6 +20,7 @@ export default function OnboardingPage() {
   const [domain, setDomain] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   // If someone lands here directly without going through signup, redirect them.
   if (!email) {
@@ -27,8 +28,18 @@ export default function OnboardingPage() {
     return null;
   }
 
+  // Role → dashboard route mapping (exhaustive)
+  const DASHBOARD_ROUTES: Record<string, string> = {
+    student: '/student',
+    mentor: '/mentor',
+    faculty: '/faculty',
+    client: '/client',
+    admin: '/admin',
+  };
+
   const handleComplete = async () => {
     setIsLoading(true);
+    setError('');
     
     try {
       const nameParts = name.trim().split(' ');
@@ -45,16 +56,21 @@ export default function OnboardingPage() {
         company_name: companyName || undefined
       };
 
+      // /auth/register returns Token schema directly (no StandardResponse wrapper)
       const tokenResponse = await api.post('/auth/register', registerPayload);
       const token = tokenResponse.data.access_token;
 
-      // Fetch user profile
+      if (!token) {
+        throw new Error('No access token returned from server.');
+      }
+
+      // Fetch user profile — /users/me uses StandardResponse, so data is at .data.data
       const userResponse = await api.get('/users/me', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const userData = userResponse.data.data;
       
-      const mappedRole = userData.role?.role_name?.toLowerCase() || 'student';
+      const mappedRole = userData.role?.role_name?.toLowerCase() || role.toLowerCase();
       const mappedUser = {
         id: userData.user_id.toString(),
         name: `${userData.first_name} ${userData.last_name}`,
@@ -63,17 +79,30 @@ export default function OnboardingPage() {
         studentLevel: userData.student_profile?.level?.name?.replace('Level ', '') || null
       };
       
+      // Authenticate in store BEFORE navigating so ProtectedRoute passes
       login(mappedUser as any, token);
       
-      navigate(role === 'student' ? '/student' : '/client', { replace: true });
-    } catch (err) {
-      console.error(err);
+      const destination = DASHBOARD_ROUTES[mappedRole] || '/student';
+      navigate(destination, { replace: true });
+    } catch (err: any) {
+      console.error('Registration failed:', err);
+      // Extract meaningful error message from API or network error
+      const detail = err?.response?.data?.detail;
+      if (typeof detail === 'string') {
+        setError(detail);
+      } else if (Array.isArray(detail)) {
+        setError(detail.map((d: any) => d.msg).join(', '));
+      } else {
+        setError('Registration failed. Please try again or use a different email.');
+      }
+    } finally {
       setIsLoading(false);
     }
   };
 
   const nextStep = () => setStep((s) => s + 1);
   const prevStep = () => setStep((s) => s - 1);
+
 
   return (
     <div className="min-h-screen bg-background flex flex-col justify-center items-center p-4">
@@ -223,6 +252,12 @@ export default function OnboardingPage() {
                       : 'Your client dashboard is ready. Let\'s post your first project.'}
                   </CardDescription>
                 </CardHeader>
+                {error && (
+                  <div className="mx-6 flex items-start gap-3 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive font-medium">
+                    <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                    {error}
+                  </div>
+                )}
                 <CardFooter className="flex justify-center pt-8">
                   <Button 
                     size="lg" 

@@ -13,6 +13,7 @@ import LearningPortal from "../features/learning/LearningPortal";
 import ProjectManagement from "../features/projects/ProjectManagement";
 import AnalyticsDashboard from "../pages/analytics-dashboard";
 import AdminPanel from "../pages/admin-panel";
+import ProfilePage from "../features/settings/ProfilePage";
 
 // Lazy load large role-based dashboards to improve performance
 const StudentDashboard = lazy(() => import("../features/student-dashboard/StudentDashboard"));
@@ -53,6 +54,11 @@ export function AppRoutes() {
         <Route path="/achievements" element={
           <ProtectedRoute>
             <div className="pt-16"><PlaceholderPage title="Achievements" description="View badges, certificates, and milestones." /></div>
+          </ProtectedRoute>
+        } />
+        <Route path="/settings/profile" element={
+          <ProtectedRoute>
+            <ProfilePage />
           </ProtectedRoute>
         } />
         <Route path="/settings/*" element={

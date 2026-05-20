@@ -34,3 +34,18 @@ def submit_review(
         
     review = svc.submit_review(current_user.user_id, reviewer_type, student_id, request)
     return success_response(data=review, message="Review submitted and trust score updated.")
+
+student_role_checker = RoleChecker(["Student"])
+
+@router.get("/me/reviews", response_model=StandardResponse[List[StudentReview]])
+def get_my_reviews(
+    current_user: User = Depends(student_role_checker),
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Get all reviews received by the currently logged-in student.
+    """
+    svc = ReputationService(db)
+    reviews = svc.get_reviews(current_user.user_id)
+    return success_response(data=reviews)
+
