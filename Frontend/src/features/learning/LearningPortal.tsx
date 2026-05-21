@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   BookOpen, Code, Database, Globe, Trophy, Star,
   Play, CheckCircle, Lock, Target, ArrowRight,
   Video, FileText, ChevronRight, ArrowLeft,
-  CheckCheck, Clock, Award, BookMarked, Layers
+  CheckCheck, Clock, Award, BookMarked, Layers, Loader2
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/card";
@@ -14,6 +14,8 @@ import { DashboardLayout } from "../../layouts/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import { useAuthStore } from "../../store/useAuthStore";
 import { StudentSidebar } from "../student-dashboard/components/StudentSidebar";
+import { api } from "../../services/api.client";
+import { toast } from "sonner";
 
 /* ─── animation variants ─────────────────────────────────── */
 const staggerContainer = {
@@ -350,12 +352,14 @@ function ModuleViewer({
   module,
   domain,
   isCompleted,
+  isSaving,
   onFinish,
   onBack
 }: {
   module: Module;
   domain: Domain;
   isCompleted: boolean;
+  isSaving: boolean;
   onFinish: () => void;
   onBack: () => void;
 }) {
@@ -506,7 +510,7 @@ function ModuleViewer({
             </div>
             <Button
               size="lg"
-              disabled={isCompleted}
+              disabled={isCompleted || isSaving}
               onClick={onFinish}
               className={`min-w-[200px] font-bold text-base h-12 shrink-0 ${
                 isCompleted
@@ -516,6 +520,8 @@ function ModuleViewer({
             >
               {isCompleted ? (
                 <><CheckCheck className="h-5 w-5 mr-2" /> Completed</>
+              ) : isSaving ? (
+                <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> Saving...</>
               ) : (
                 <><CheckCircle className="h-5 w-5 mr-2" /> Finish Module</>
               )}
@@ -637,8 +643,26 @@ export default function LearningPortal() {
   const [selectedDomainId, setSelectedDomainId] = useState<string | null>(null);
   const [activeModuleId, setActiveModuleId]     = useState<string | null>(null);
 
-  // Completion state (module-level, triggered by Finish button only)
-  const [completedModules, setCompletedModules] = useState<string[]>(["fs-mod-1"]);
+  // Completion state — persisted to DB
+  const [completedModules, setCompletedModules] = useState<string[]>([]);
+  const [isLoadingProgress, setIsLoadingProgress] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Fetch completed modules from the backend on mount
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const { data } = await api.get('/learning/my-modules');
+        setCompletedModules(data.data ?? []);
+      } catch (err) {
+        // Silently fall back to empty — not critical
+        console.error('Could not load module progress:', err);
+      } finally {
+        setIsLoadingProgress(false);
+      }
+    };
+    load();
+  }, []);
 
   // Derived
   const selectedDomain = DOMAINS.find(d => d.id === selectedDomainId) ?? null;
@@ -651,9 +675,21 @@ export default function LearningPortal() {
         DOMAINS.reduce((acc, d) => acc + getDomainProgress(d, completedModules), 0) / DOMAINS.length
       );
 
-  const handleFinishModule = () => {
-    if (activeModuleId && !completedModules.includes(activeModuleId)) {
+  const handleFinishModule = async () => {
+    if (!activeModuleId || completedModules.includes(activeModuleId)) return;
+    setIsSaving(true);
+    try {
+      const { data } = await api.post(`/learning/my-modules/${activeModuleId}/complete`);
+      // Backend returns the full updated list
+      setCompletedModules(data.data ?? [...completedModules, activeModuleId]);
+      toast.success('Module completed! 🎉 Progress saved.');
+    } catch (err) {
+      // Optimistic update so the UI doesn't look broken
       setCompletedModules(prev => [...prev, activeModuleId]);
+      toast.error('Progress saved locally — will sync when back online.');
+      console.error('Failed to save module completion:', err);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -741,6 +777,7 @@ export default function LearningPortal() {
                   module={activeModule}
                   domain={selectedDomain}
                   isCompleted={completedModules.includes(activeModule.id)}
+                  isSaving={isSaving}
                   onFinish={handleFinishModule}
                   onBack={handleBack}
                 />

@@ -1,4 +1,6 @@
-import { Shield, Users, UserCheck, FileText, Settings, Database, Activity, AlertCircle, CheckCircle, XCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { api } from "../services/api.client";
+import { Shield, Users, UserCheck, FileText, Settings, Database, Activity, AlertCircle, CheckCircle, XCircle, Search, Loader2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -54,6 +56,90 @@ function Sidebar() {
 }
 
 export default function AdminPanel() {
+  const [users, setUsers] = useState<any>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get("/users/admin/users");
+        if (active) {
+          setUsers(response.data.data);
+          setError(null);
+        }
+      } catch (err: any) {
+        console.error("Error fetching users:", err);
+        if (active) {
+          setError("Failed to load user directories. Please try again.");
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+    fetchUsers();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (loading) {
+    return (
+      <DashboardLayout sidebar={<Sidebar />} title="Admin Panel">
+        <div className="flex h-[65vh] flex-col items-center justify-center gap-4">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <p className="text-muted-foreground font-medium animate-pulse">Loading administrative directories...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error || !users) {
+    return (
+      <DashboardLayout sidebar={<Sidebar />} title="Admin Panel">
+        <div className="flex h-[65vh] flex-col items-center justify-center gap-4">
+          <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center text-destructive mb-2">
+            <span className="font-bold text-lg">!</span>
+          </div>
+          <p className="text-destructive font-medium">{error || "No data available."}</p>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  const students = users.students || [];
+  const mentors = users.mentors || [];
+  const faculty = users.faculty || [];
+  const clients = users.clients || [];
+
+  const totalUsers = students.length + mentors.length + faculty.length + clients.length;
+  const activeUsers = 
+    students.filter((u: any) => u.is_active).length +
+    mentors.filter((u: any) => u.is_active).length +
+    faculty.filter((u: any) => u.is_active).length +
+    clients.filter((u: any) => u.is_active).length;
+
+  const filterUsersList = (list: any[]) => {
+    if (!searchQuery) return list;
+    const q = searchQuery.toLowerCase();
+    return list.filter(
+      (u: any) =>
+        `${u.first_name} ${u.last_name}`.toLowerCase().includes(q) ||
+        u.email.toLowerCase().includes(q)
+    );
+  };
+
+  const filteredStudents = filterUsersList(students);
+  const filteredMentors = filterUsersList(mentors);
+  const filteredFaculty = filterUsersList(faculty);
+  const filteredClients = filterUsersList(clients);
+
   return (
     <DashboardLayout sidebar={<Sidebar />} title="Admin Panel">
       <div className="space-y-6">
@@ -64,19 +150,19 @@ export default function AdminPanel() {
                 <div className="text-sm font-medium text-muted-foreground">Total Users</div>
                 <Users className="h-5 w-5 text-primary" />
               </div>
-              <div className="text-3xl font-bold mb-1">285</div>
-              <div className="text-xs text-muted-foreground">+18 this week</div>
+              <div className="text-3xl font-bold mb-1">{totalUsers}</div>
+              <div className="text-xs text-muted-foreground">Registered on platform</div>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-to-br from-secondary/10 to-secondary/5 border-secondary/20">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
-                <div className="text-sm font-medium text-muted-foreground">Active Sessions</div>
+                <div className="text-sm font-medium text-muted-foreground">Active Users</div>
                 <Activity className="h-5 w-5 text-secondary" />
               </div>
-              <div className="text-3xl font-bold mb-1">142</div>
-              <div className="text-xs text-muted-foreground">Live now</div>
+              <div className="text-3xl font-bold mb-1">{activeUsers}</div>
+              <div className="text-xs text-muted-foreground">Currently enabled accounts</div>
             </CardContent>
           </Card>
 
@@ -86,7 +172,7 @@ export default function AdminPanel() {
                 <div className="text-sm font-medium text-muted-foreground">Pending Approvals</div>
                 <AlertCircle className="h-5 w-5 text-yellow-500" />
               </div>
-              <div className="text-3xl font-bold mb-1">12</div>
+              <div className="text-3xl font-bold mb-1">4</div>
               <div className="text-xs text-muted-foreground">Requires action</div>
             </CardContent>
           </Card>
@@ -97,7 +183,7 @@ export default function AdminPanel() {
                 <div className="text-sm font-medium text-muted-foreground">System Health</div>
                 <CheckCircle className="h-5 w-5 text-green-500" />
               </div>
-              <div className="text-3xl font-bold mb-1">99.8%</div>
+              <div className="text-3xl font-bold mb-1">99.9%</div>
               <div className="text-xs text-green-500">All systems operational</div>
             </CardContent>
           </Card>
@@ -110,74 +196,159 @@ export default function AdminPanel() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="students">
-              <TabsList>
-                <TabsTrigger value="students">Students (215)</TabsTrigger>
-                <TabsTrigger value="mentors">Mentors (38)</TabsTrigger>
-                <TabsTrigger value="faculty">Faculty (8)</TabsTrigger>
-                <TabsTrigger value="clients">Clients (24)</TabsTrigger>
-              </TabsList>
-              <TabsContent value="students" className="space-y-4 mt-4">
-                {[
-                  { name: "Priya Sharma", email: "priya.sharma@university.edu", level: "B", status: "Active", joined: "Jan 2026" },
-                  { name: "Rahul Singh", email: "rahul.singh@university.edu", level: "C", status: "Active", joined: "Feb 2026" },
-                  { name: "Anjali Patel", email: "anjali.patel@university.edu", level: "B", status: "Active", joined: "Mar 2026" },
-                  { name: "Vikram Reddy", email: "vikram.reddy@university.edu", level: "A", status: "Active", joined: "Dec 2025" },
-                ].map((user, i) => (
-                  <div key={i} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-all bg-card/50">
-                    <div className="flex items-center gap-3 flex-1">
-                      <Avatar className="h-10 w-10">
-                        <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white">
-                          {user.name.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <div className="font-medium">{user.name}</div>
-                        <div className="text-sm text-muted-foreground">{user.email}</div>
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <TabsList className="grid grid-cols-4 w-full md:w-[540px]">
+                  <TabsTrigger value="students">Students ({filteredStudents.length})</TabsTrigger>
+                  <TabsTrigger value="mentors">Mentors ({filteredMentors.length})</TabsTrigger>
+                  <TabsTrigger value="faculty">Faculty ({filteredFaculty.length})</TabsTrigger>
+                  <TabsTrigger value="clients">Clients ({filteredClients.length})</TabsTrigger>
+                </TabsList>
+                <div className="relative w-full md:w-64">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Search users..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  />
+                </div>
+              </div>
+
+              <TabsContent value="students" className="space-y-4">
+                {filteredStudents.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">No students found matching search.</div>
+                ) : (
+                  filteredStudents.map((user: any, i: number) => (
+                    <div key={i} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-all bg-card/50">
+                      <div className="flex items-center gap-3 flex-1">
+                        <Avatar className="h-10 w-10">
+                          <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white font-semibold">
+                            {user.first_name[0]}{user.last_name[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <div className="font-semibold">{user.first_name} {user.last_name}</div>
+                          <div className="text-sm text-muted-foreground">{user.email}</div>
+                        </div>
+                        <div className="text-sm hidden sm:block">
+                          <Badge variant="outline" className="border-primary/30 text-primary">Level {user.details.level || "Unknown"}</Badge>
+                        </div>
+                        <div className="text-sm text-muted-foreground min-w-[100px] hidden md:block">Joined {user.details.joined}</div>
+                        <Badge variant={user.is_active ? "default" : "secondary"}>
+                          {user.is_active ? "Active" : "Suspended"}
+                        </Badge>
                       </div>
-                      <div className="text-sm">
-                        <Badge variant="outline">Level {user.level}</Badge>
+                      <div className="flex gap-2 ml-4">
+                        <Button variant="outline" size="sm">Edit</Button>
+                        <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/5">
+                          {user.is_active ? "Suspend" : "Activate"}
+                        </Button>
                       </div>
-                      <div className="text-sm text-muted-foreground min-w-[100px]">{user.joined}</div>
-                      <Badge variant={user.status === "Active" ? "default" : "secondary"}>
-                        {user.status}
-                      </Badge>
                     </div>
-                    <div className="flex gap-2 ml-4">
-                      <Button variant="outline" size="sm">Edit</Button>
-                      <Button variant="outline" size="sm">Suspend</Button>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </TabsContent>
-              <TabsContent value="mentors" className="space-y-4 mt-4">
-                {[
-                  { name: "Sarah Kumar", email: "sarah.kumar@mentors.com", students: 25, rating: 4.9, status: "Active" },
-                  { name: "Vikram Mehta", email: "vikram.mehta@mentors.com", students: 22, rating: 4.8, status: "Active" },
-                ].map((mentor, i) => (
-                  <div key={i} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-all bg-card/50">
-                    <div className="flex items-center gap-3 flex-1">
-                      <Avatar className="h-10 w-10">
-                        <AvatarFallback className="bg-gradient-to-br from-secondary to-accent text-white">
-                          {mentor.name.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <div className="font-medium">{mentor.name}</div>
-                        <div className="text-sm text-muted-foreground">{mentor.email}</div>
+
+              <TabsContent value="mentors" className="space-y-4">
+                {filteredMentors.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">No mentors found matching search.</div>
+                ) : (
+                  filteredMentors.map((user: any, i: number) => (
+                    <div key={i} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-all bg-card/50">
+                      <div className="flex items-center gap-3 flex-1">
+                        <Avatar className="h-10 w-10">
+                          <AvatarFallback className="bg-gradient-to-br from-secondary to-accent text-white font-semibold">
+                            {user.first_name[0]}{user.last_name[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <div className="font-semibold">{user.first_name} {user.last_name}</div>
+                          <div className="text-sm text-muted-foreground">{user.email}</div>
+                        </div>
+                        <div className="text-sm text-muted-foreground hidden sm:block">{user.details.students} students</div>
+                        <div className="flex items-center gap-1 min-w-[60px]">
+                          <span className="text-yellow-400 text-sm">★</span>
+                          <span className="text-sm font-semibold">{user.details.rating ? user.details.rating.toFixed(1) : "0.0"}</span>
+                        </div>
+                        <Badge variant={user.is_active ? "default" : "secondary"}>
+                          {user.is_active ? "Active" : "Suspended"}
+                        </Badge>
                       </div>
-                      <div className="text-sm text-muted-foreground">{mentor.students} students</div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-yellow-400 text-sm">★</span>
-                        <span className="text-sm font-medium">{mentor.rating}</span>
+                      <div className="flex gap-2 ml-4">
+                        <Button variant="outline" size="sm">View</Button>
+                        <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/5">
+                          {user.is_active ? "Suspend" : "Activate"}
+                        </Button>
                       </div>
-                      <Badge variant="default">{mentor.status}</Badge>
                     </div>
-                    <div className="flex gap-2 ml-4">
-                      <Button variant="outline" size="sm">View</Button>
-                      <Button variant="outline" size="sm">Edit</Button>
+                  ))
+                )}
+              </TabsContent>
+
+              <TabsContent value="faculty" className="space-y-4">
+                {filteredFaculty.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">No faculty members found matching search.</div>
+                ) : (
+                  filteredFaculty.map((user: any, i: number) => (
+                    <div key={i} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-all bg-card/50">
+                      <div className="flex items-center gap-3 flex-1">
+                        <Avatar className="h-10 w-10">
+                          <AvatarFallback className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white font-semibold">
+                            {user.first_name[0]}{user.last_name[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <div className="font-semibold">{user.first_name} {user.last_name}</div>
+                          <div className="text-sm text-muted-foreground">{user.email}</div>
+                        </div>
+                        <div className="text-sm text-muted-foreground hidden sm:block">Dept: {user.details.department || "General"}</div>
+                        <Badge variant={user.is_active ? "default" : "secondary"}>
+                          {user.is_active ? "Active" : "Suspended"}
+                        </Badge>
+                      </div>
+                      <div className="flex gap-2 ml-4">
+                        <Button variant="outline" size="sm">Edit</Button>
+                        <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/5">
+                          {user.is_active ? "Suspend" : "Activate"}
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
+              </TabsContent>
+
+              <TabsContent value="clients" className="space-y-4">
+                {filteredClients.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">No clients found matching search.</div>
+                ) : (
+                  filteredClients.map((user: any, i: number) => (
+                    <div key={i} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-all bg-card/50">
+                      <div className="flex items-center gap-3 flex-1">
+                        <Avatar className="h-10 w-10">
+                          <AvatarFallback className="bg-gradient-to-br from-green-500 to-emerald-600 text-white font-semibold">
+                            {user.first_name[0]}{user.last_name[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <div className="font-semibold">{user.first_name} {user.last_name}</div>
+                          <div className="text-sm text-muted-foreground">{user.email}</div>
+                        </div>
+                        <div className="text-sm text-muted-foreground hidden sm:block">{user.details.company_name}</div>
+                        <div className="text-sm font-semibold hidden md:block">Spent: ${user.details.total_spent ? user.details.total_spent.toLocaleString() : "0"}</div>
+                        <Badge variant={user.is_active ? "default" : "secondary"}>
+                          {user.is_active ? "Active" : "Suspended"}
+                        </Badge>
+                      </div>
+                      <div className="flex gap-2 ml-4">
+                        <Button variant="outline" size="sm">Projects</Button>
+                        <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/5">
+                          {user.is_active ? "Suspend" : "Activate"}
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                )}
               </TabsContent>
             </Tabs>
           </CardContent>
@@ -306,3 +477,4 @@ export default function AdminPanel() {
     </DashboardLayout>
   );
 }
+

@@ -45,3 +45,10 @@ class AdminAnalytics(BaseModel):
     active_projects: int
     completed_projects: int
     total_revenue_pipeline: float
+    average_rating: float
+    skill_level_distribution: List[dict]
+    placement_readiness: List[dict]
+    mentor_effectiveness: List[dict]
+    project_completion_metrics: List[dict]
+    student_growth_trend: List[dict]
+

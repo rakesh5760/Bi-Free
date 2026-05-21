@@ -13,6 +13,7 @@ from app.auth.deps import get_db
 from app.models.user import User, Role
 from app.models.profile import StudentProfile, ClientProfile
 from app.models.core import Domain, Level
+from app.models.learning import Assignment, StudentProgress
 
 router = APIRouter()
 
@@ -58,6 +59,19 @@ def register(
             trust_score=0.0
         )
         db.add(profile)
+        db.commit()
+        db.refresh(profile)
+        
+        # Initialize student progress dynamically
+        assignments = db.query(Assignment).all()
+        for assignment in assignments:
+            progress = StudentProgress(
+                student_id=profile.profile_id,
+                item_id=assignment.assignment_id,
+                item_type="Assignment",
+                status="NOT_STARTED"
+            )
+            db.add(progress)
         
     elif request.role.lower() == 'client':
         domain = db.query(Domain).filter(Domain.name.ilike(f"%{request.domain}%")).first() if request.domain else None

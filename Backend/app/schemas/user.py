@@ -81,3 +81,25 @@ class UserProfileResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
+class AdminUserDetail(BaseModel):
+    user_id: int
+    first_name: str
+    last_name: str
+    email: str
+    role: str
+    created_at: datetime
+    is_active: bool
+    details: dict
+
+    class Config:
+        from_attributes = True
+
+
+class AdminUsersResponse(BaseModel):
+    students: List[AdminUserDetail]
+    mentors: List[AdminUserDetail]
+    faculty: List[AdminUserDetail]
+    clients: List[AdminUserDetail]
+
+

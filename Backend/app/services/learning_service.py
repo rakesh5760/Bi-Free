@@ -21,15 +21,19 @@ class LearningService:
         if not assignment:
             raise HTTPException(status_code=404, detail="Assignment not found")
             
+        # student_id argument is user_id in code, retrieve profile_id
+        student_profile = self.student_svc.get_profile(student_id)
+        profile_id = student_profile.profile_id
+            
         progress = self.db.query(StudentProgress).filter(
-            StudentProgress.student_id == student_id,
+            StudentProgress.student_id == profile_id,
             StudentProgress.item_id == assignment_id,
             StudentProgress.item_type == "Assignment"
         ).first()
         
         if not progress:
             progress = StudentProgress(
-                student_id=student_id,
+                student_id=profile_id,
                 item_id=assignment_id,
                 item_type="Assignment"
             )
@@ -45,8 +49,12 @@ class LearningService:
         """
         Mentor reviews an assignment.
         """
+        # student_id argument is user_id in code, retrieve profile_id
+        student_profile = self.student_svc.get_profile(student_id)
+        profile_id = student_profile.profile_id
+
         progress = self.db.query(StudentProgress).filter(
-            StudentProgress.student_id == student_id,
+            StudentProgress.student_id == profile_id,
             StudentProgress.item_id == assignment_id,
             StudentProgress.item_type == "Assignment"
         ).first()
@@ -59,10 +67,9 @@ class LearningService:
         
         if approve:
             # Add a trust score boost for completing an assignment
-            profile = self.student_svc.get_profile(student_id)
-            profile.trust_score = float(profile.trust_score) + 5.0
+            student_profile.trust_score = float(student_profile.trust_score) + 5.0
             
-            # Re-evaluate level progression automatically
+            # Re-evaluate level progression automatically (expects user_id)
             self.student_svc.evaluate_progression(student_id)
             
         self.db.commit()

@@ -97,16 +97,14 @@ export function DashboardLayout({ children, sidebar, title }: DashboardLayoutPro
             </div>
 
             {/* Topbar Actions */}
-            <div className="flex items-center gap-2 sm:gap-4">
+            <div className="flex items-center gap-1 sm:gap-2">
               <ThemeToggle />
-              
+
               {/* Notifications Dropdown */}
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative">
-                    <Bell className="h-5 w-5" />
-                    <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-destructive border-2 border-background" />
-                  </Button>
+                <DropdownMenuTrigger className="relative inline-flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer">
+                  <Bell className="h-5 w-5" />
+                  <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive border-2 border-background" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-80 p-0">
                   <div className="p-4 border-b border-border/50">
@@ -139,20 +137,17 @@ export function DashboardLayout({ children, sidebar, title }: DashboardLayoutPro
 
               {/* Profile Dropdown */}
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                    <Avatar className="h-9 w-9 border border-border/50">
-                      {user?.avatarUrl ? (
-                        <AvatarImage src={user.avatarUrl} alt={user.name} />
-                      ) : (
-                        <AvatarFallback className="bg-gradient-to-br from-primary to-violet-600 text-white text-xs font-medium">
-                          {user?.name ? user.name.substring(0, 2).toUpperCase() : <User className="h-4 w-4" />}
-                        </AvatarFallback>
-                      )}
-                    </Avatar>
-                  </Button>
+                <DropdownMenuTrigger className="relative h-9 w-9 rounded-full overflow-hidden border-2 border-border/50 hover:border-primary/60 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer flex-shrink-0">
+                  {user?.avatarUrl ? (
+                    <img src={user.avatarUrl} alt={user.name} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="h-full w-full bg-gradient-to-br from-primary to-violet-600 flex items-center justify-center text-white text-xs font-bold">
+                      {user?.name ? user.name.substring(0, 2).toUpperCase() : <User className="h-4 w-4" />}
+                    </div>
+                  )}
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuContent align="end" className="w-64" sideOffset={8}>
+                  {/* User info header */}
                   <div className="flex items-center gap-3 p-3 border-b border-border/50">
                     <Avatar className="h-10 w-10 border border-border/50">
                       {user?.avatarUrl ? (
@@ -163,10 +158,10 @@ export function DashboardLayout({ children, sidebar, title }: DashboardLayoutPro
                         </AvatarFallback>
                       )}
                     </Avatar>
-                    <div className="flex flex-col space-y-0.5">
-                      <p className="text-sm font-semibold text-foreground leading-none">{user?.name || 'User'}</p>
+                    <div className="flex flex-col space-y-0.5 min-w-0">
+                      <p className="text-sm font-semibold text-foreground leading-none truncate">{user?.name || 'User'}</p>
                       <p className="text-xs text-muted-foreground truncate max-w-[150px]">{user?.email}</p>
-                      <div className="flex items-center gap-1 mt-1">
+                      <div className="flex items-center gap-1 mt-1 flex-wrap">
                         <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
                           {formatRole(user?.role)}
                         </span>
@@ -178,17 +173,44 @@ export function DashboardLayout({ children, sidebar, title }: DashboardLayoutPro
                       </div>
                     </div>
                   </div>
+
+                  {/* Navigation items — using onClick+navigate for reliable routing */}
                   <DropdownMenuGroup className="p-1">
-                    <DropdownMenuItem className="cursor-pointer" asChild><Link to="/settings/profile">Profile Settings</Link></DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer" asChild><Link to="/settings/billing">Billing & Subscriptions</Link></DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer" asChild><Link to="/settings/security">Security</Link></DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="cursor-pointer flex items-center gap-2 rounded-md px-2 py-2 text-sm font-medium"
+                      onClick={() => navigate('/settings/profile')}
+                    >
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      Profile Settings
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="cursor-pointer flex items-center gap-2 rounded-md px-2 py-2 text-sm font-medium"
+                      onClick={() => navigate('/settings/billing')}
+                    >
+                      <span className="h-4 w-4 text-muted-foreground flex items-center justify-center text-xs font-bold">$</span>
+                      Billing &amp; Subscriptions
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="cursor-pointer flex items-center gap-2 rounded-md px-2 py-2 text-sm font-medium"
+                      onClick={() => navigate('/settings/security')}
+                    >
+                      <span className="h-4 w-4 text-muted-foreground flex items-center justify-center">🔒</span>
+                      Security
+                    </DropdownMenuItem>
                   </DropdownMenuGroup>
+
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer m-1">
+
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer m-1 flex items-center gap-2 rounded-md px-2 py-2 text-sm font-semibold"
+                  >
+                    <span className="h-4 w-4 flex items-center justify-center">→</span>
                     Log out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+
             </div>
           </header>
 

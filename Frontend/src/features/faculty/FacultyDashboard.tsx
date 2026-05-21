@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router";
 import { DashboardLayout } from "../../layouts/DashboardLayout";
 import { FacultySidebar } from "./components/FacultySidebar";
 import { FacultyOverview } from "./components/FacultyOverview";
+import { FacultyStudentManagement } from "./components/FacultyStudentManagement";
 import { PlaceholderPage } from "../../components/PlaceholderPage";
 
 export default function FacultyDashboard() {
@@ -12,7 +13,7 @@ export default function FacultyDashboard() {
         
         <Route 
           path="students" 
-          element={<PlaceholderPage title="Student Management" description="Manage student profiles and skill progression." />} 
+          element={<FacultyStudentManagement />} 
         />
         <Route 
           path="mentors" 
