@@ -3,6 +3,7 @@ import { DashboardLayout } from "../../layouts/DashboardLayout";
 import { FacultySidebar } from "./components/FacultySidebar";
 import { FacultyOverview } from "./components/FacultyOverview";
 import { FacultyStudentManagement } from "./components/FacultyStudentManagement";
+import { FacultyMentorDirectory } from "./components/FacultyMentorDirectory";
 import { PlaceholderPage } from "../../components/PlaceholderPage";
 
 export default function FacultyDashboard() {
@@ -17,7 +18,7 @@ export default function FacultyDashboard() {
         />
         <Route 
           path="mentors" 
-          element={<PlaceholderPage title="Mentor Directory" description="View and assign mentors to projects." />} 
+          element={<FacultyMentorDirectory />} 
         />
         <Route 
           path="allocations" 

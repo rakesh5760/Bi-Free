@@ -33,27 +33,44 @@ const fadeIn = {
 
 export function MentorOverview() {
   const [analytics, setAnalytics] = useState<any>(null);
+  const [allocations, setAllocations] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchAnalytics() {
+    async function fetchData() {
       try {
-        const res = await api.get('/analytics/mentor/me');
-        if (res.data.success) {
-          setAnalytics(res.data.data);
+        const [analyticsRes, allocationsRes] = await Promise.all([
+          api.get('/analytics/mentor/me'),
+          api.get('/mentors/allocations/me')
+        ]);
+        if (analyticsRes.data.success) {
+          setAnalytics(analyticsRes.data.data);
+        }
+        if (allocationsRes.data.success) {
+          setAllocations(allocationsRes.data.data || []);
         }
       } catch (err) {
-        console.error("Failed to fetch mentor analytics", err);
+        console.error("Failed to fetch mentor data", err);
       } finally {
         setIsLoading(false);
       }
     }
-    fetchAnalytics();
+    fetchData();
   }, []);
 
-  // Calculate mock success rate
   const total = (analytics?.total_active_allocations || 0) + (analytics?.total_completed_allocations || 0);
   const successRate = total > 0 ? Math.round((analytics.total_completed_allocations / total) * 100) : 100;
+
+  // Extract assigned students from allocations
+  const assignedStudents = allocations.flatMap(a => 
+    (a.team_members || []).map((m: any) => ({
+      name: m.student_name || "Unknown Student",
+      project_id: a.project_id,
+      created_at: m.created_at,
+      progress: Math.floor(Math.random() * 50) + 40, // Mock progress for visual
+      status: "On Track"
+    }))
+  );
 
   return (
     <motion.div 
@@ -220,25 +237,24 @@ export function MentorOverview() {
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y divide-border/50">
-                {[
-                  { name: "Vikram Reddy", level: "A", progress: 92, projects: 5, status: "Excellent", lastActive: "30m ago" },
-                  { name: "Priya Sharma", level: "B", progress: 85, projects: 3, status: "On Track", lastActive: "2h ago" },
-                  { name: "Rahul Singh", level: "C", progress: 72, projects: 2, status: "On Track", lastActive: "5h ago" },
-                  { name: "Anjali Patel", level: "B", progress: 48, projects: 4, status: "At Risk", lastActive: "2d ago" },
-                ].map((student, i) => (
+                {isLoading ? (
+                  <div className="p-8 flex justify-center"><Loader2 className="animate-spin h-6 w-6 text-violet-500" /></div>
+                ) : assignedStudents.length === 0 ? (
+                  <div className="p-8 text-center text-muted-foreground font-medium">No students assigned yet.</div>
+                ) : assignedStudents.map((student: any, i: number) => (
                   <div key={i} className="p-4 hover:bg-muted/30 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-4 min-w-[200px]">
                       <Avatar className="h-10 w-10 border border-border/50 shadow-sm">
                         <AvatarFallback className="bg-gradient-to-br from-violet-500 to-indigo-500 text-white font-bold text-xs">
-                          {student.name.split(' ').map(n => n[0]).join('')}
+                          {student.name.split(' ').map((n: string) => n[0]).join('')}
                         </AvatarFallback>
                       </Avatar>
                       <div>
                         <div className="font-bold text-sm text-foreground">{student.name}</div>
                         <div className="text-xs font-medium text-muted-foreground flex items-center gap-2">
-                          Level {student.level}
+                          Project #{student.project_id}
                           <span className="h-1 w-1 rounded-full bg-border" />
-                          {student.lastActive}
+                          Joined {new Date(student.created_at).toLocaleDateString()}
                         </div>
                       </div>
                     </div>
@@ -285,7 +301,6 @@ export function MentorOverview() {
               <div className="divide-y divide-border/50">
                 {[
                   { student: "Priya Sharma", project: "E-commerce REST API", submitted: "2h ago", priority: "high", type: "Code Review" },
-                  { student: "Vikram Reddy", project: "Client Deployment", submitted: "5h ago", priority: "medium", type: "Final Approval" },
                 ].map((review, i) => (
                   <div key={i} className="p-4 hover:bg-muted/30 transition-colors">
                     <div className="flex items-start justify-between mb-2">

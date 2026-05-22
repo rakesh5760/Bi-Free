@@ -63,6 +63,7 @@ class Project(ProjectBase):
     created_at: datetime
     updated_at: datetime
     tasks: List[Task] = []
+    allocation: Optional["ProjectAllocation"] = None
     class Config:
         from_attributes = True
 
@@ -78,6 +79,7 @@ class TeamMember(TeamMemberBase):
     team_member_id: int
     allocation_id: int
     student_id: int
+    student_name: Optional[str] = None
     created_at: datetime
     class Config:
         from_attributes = True
@@ -94,6 +96,7 @@ class ProjectAllocation(ProjectAllocationBase):
     allocation_id: int
     project_id: int
     mentor_id: int
+    mentor_name: Optional[str] = None
     team_members: List[TeamMember] = []
     created_at: datetime
     class Config:

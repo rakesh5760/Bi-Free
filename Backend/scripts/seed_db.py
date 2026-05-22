@@ -60,7 +60,9 @@ def seed():
         react_skill = Skill(name="React.js", domain_id=web_dev.domain_id)
         fastapi_skill = Skill(name="FastAPI", domain_id=web_dev.domain_id)
         python_skill = Skill(name="Python", domain_id=ai.domain_id)
-        db.add_all([react_skill, fastapi_skill, python_skill])
+        cyber_domain = Domain(name="Cyber Security", description="Information Security & Ethical Hacking")
+        data_domain = Domain(name="Data Science", description="Data Analytics and Engineering")
+        db.add_all([react_skill, fastapi_skill, python_skill, cyber_domain, data_domain])
         
         level_d = Level(name="Level D", required_trust_score=0.0)
         level_c = Level(name="Level C", required_trust_score=20.0)
@@ -83,16 +85,22 @@ def seed():
         
         faculty_user = User(email="faculty@skillforge.edu", password_hash=pwd, first_name="Alan", last_name="Turing", role_id=role_faculty.role_id, is_active=True)
         mentor_user = User(email="mentor@skillforge.edu", password_hash=pwd, first_name="Sarah", last_name="Mentor", role_id=role_mentor.role_id, is_active=True)
+        mentor_ai = User(email="ai_mentor@skillforge.edu", password_hash=pwd, first_name="David", last_name="AI-Expert", role_id=role_mentor.role_id, is_active=True)
+        mentor_cyber = User(email="cyber_mentor@skillforge.edu", password_hash=pwd, first_name="Eve", last_name="Hacker", role_id=role_mentor.role_id, is_active=True)
+        
         client_user = User(email="client@skillforge.edu", password_hash=pwd, first_name="TechStart", last_name="Corp", role_id=role_client.role_id, is_active=True)
         student_a = User(email="alex@student.edu", password_hash=pwd, first_name="Alex", last_name="Developer", role_id=role_student.role_id, is_active=True)
         student_c = User(email="junior@student.edu", password_hash=pwd, first_name="Junior", last_name="Coder", role_id=role_student.role_id, is_active=True)
         
-        db.add_all([faculty_user, mentor_user, client_user, student_a, student_c])
+        db.add_all([faculty_user, mentor_user, mentor_ai, mentor_cyber, client_user, student_a, student_c])
         db.commit()
 
         print("Seeding Profiles...")
         fac_prof = FacultyProfile(user_id=faculty_user.user_id, department="Computer Science")
         ment_prof = MentorProfile(user_id=mentor_user.user_id, domain_id=web_dev.domain_id, rating=4.9)
+        ment_ai_prof = MentorProfile(user_id=mentor_ai.user_id, domain_id=ai.domain_id, rating=4.8)
+        ment_cyber_prof = MentorProfile(user_id=mentor_cyber.user_id, domain_id=cyber_domain.domain_id, rating=5.0)
+        
         client_prof = ClientProfile(user_id=client_user.user_id, company_name="TechStart Innovations", domain_id=web_dev.domain_id)
         
         # Student A is elite, ready for projects
@@ -103,7 +111,7 @@ def seed():
         stu_c_prof = StudentProfile(user_id=student_c.user_id, level_id=level_c.level_id, trust_score=45.0)
         stu_c_prof.skills = [python_skill]
 
-        db.add_all([fac_prof, ment_prof, client_prof, stu_a_prof, stu_c_prof])
+        db.add_all([fac_prof, ment_prof, ment_ai_prof, ment_cyber_prof, client_prof, stu_a_prof, stu_c_prof])
         db.commit()
         
         # Refresh to get IDs
@@ -175,7 +183,9 @@ def seed():
         print("Database Seeded Successfully! The platform is now ALIVE.")
         print("--- Demo Credentials ---")
         print("Faculty: faculty@skillforge.edu / password123")
-        print("Mentor: mentor@skillforge.edu / password123")
+        print("Mentor (Web): mentor@skillforge.edu / password123")
+        print("Mentor (AI): ai_mentor@skillforge.edu / password123")
+        print("Mentor (Cyber): cyber_mentor@skillforge.edu / password123")
         print("Client: client@skillforge.edu / password123")
         print("Student A: alex@student.edu / password123")
 

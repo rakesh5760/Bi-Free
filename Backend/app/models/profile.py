@@ -27,6 +27,19 @@ class StudentProfile(Base, TimestampMixin, SoftDeleteMixin):
     assigned_tasks = relationship("Task", back_populates="assigned_student")
     qa_submissions = relationship("QualityAssuranceSubmission", back_populates="submitted_student")
 
+    @property
+    def first_name(self) -> str:
+        return self.user.first_name if self.user else ""
+
+    @property
+    def last_name(self) -> str:
+        return self.user.last_name if self.user else ""
+        
+    @property
+    def email(self) -> str:
+        return self.user.email if self.user else ""
+
+
 
 class MentorProfile(Base, TimestampMixin, SoftDeleteMixin):
     __tablename__ = "mentor_profiles"

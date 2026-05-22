@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router";
 import { DashboardLayout } from "../../layouts/DashboardLayout";
 import { MentorSidebar } from "./components/MentorSidebar";
 import { MentorOverview } from "./components/MentorOverview";
+import { MentorStudentsList } from "./components/MentorStudentsList";
 import { PlaceholderPage } from "../../components/PlaceholderPage";
 
 export default function MentorDashboard() {
@@ -14,7 +15,7 @@ export default function MentorDashboard() {
         {/* Nested routes mapped to sidebar links */}
         <Route
           path="students"
-          element={<PlaceholderPage title="My Students" description="Manage and track your assigned students' progress." />}
+          element={<MentorStudentsList />}
         />
         <Route
           path="submissions"

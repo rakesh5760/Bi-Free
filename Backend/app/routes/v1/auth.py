@@ -11,7 +11,7 @@ from app.auth import security
 from app.core.config import settings
 from app.auth.deps import get_db
 from app.models.user import User, Role
-from app.models.profile import StudentProfile, ClientProfile
+from app.models.profile import StudentProfile, ClientProfile, MentorProfile
 from app.models.core import Domain, Level
 from app.models.learning import Assignment, StudentProgress
 
@@ -79,6 +79,15 @@ def register(
             user_id=new_user.user_id,
             company_name=request.company_name or "Unknown Company",
             domain_id=domain.domain_id if domain else None
+        )
+        db.add(profile)
+        
+    elif request.role.lower() == 'mentor':
+        domain = db.query(Domain).filter(Domain.name.ilike(f"%{request.domain}%")).first() if request.domain else None
+        profile = MentorProfile(
+            user_id=new_user.user_id,
+            domain_id=domain.domain_id if domain else None,
+            rating=0.0
         )
         db.add(profile)
         

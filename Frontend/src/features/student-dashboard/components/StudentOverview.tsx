@@ -391,6 +391,30 @@ export function StudentOverview() {
                             {project.status}
                           </Badge>
                         </div>
+                        
+                        {/* Display Mentor and Team Details */}
+                        {p.allocation && (
+                          <div className="mb-4 space-y-2 bg-muted/20 p-3 rounded-lg border border-border/50">
+                            <div className="flex items-center gap-2 text-sm">
+                              <span className="font-bold text-muted-foreground uppercase tracking-wider text-[10px]">Supervising Mentor:</span>
+                              <span className="font-semibold text-foreground flex items-center gap-1.5">
+                                <Award className="h-3 w-3 text-violet-500" />
+                                {p.allocation.mentor_name || "Assigned"}
+                              </span>
+                            </div>
+                            <div className="flex flex-col gap-1 text-sm">
+                              <span className="font-bold text-muted-foreground uppercase tracking-wider text-[10px]">Team Members:</span>
+                              <div className="flex flex-wrap gap-2">
+                                {(p.allocation.team_members || []).map((m: any) => (
+                                  <Badge key={m.team_member_id} variant="outline" className="text-xs bg-background">
+                                    {m.student_name || "Student"}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
                         <div className="space-y-2">
                           <div className="flex items-center justify-between text-sm font-medium">
                             <span className="text-foreground">Execution Progress</span>

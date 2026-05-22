@@ -1,19 +1,8 @@
-# SkillForge Full-Stack Run Guide
 
-Welcome to the SkillForge Enterprise Learning & Operations Platform. This guide explains how to spin up the local development environment, seed the database with realistic demo data, and access the application.
-
----
-
-## Prerequisites
-- **Python 3.10+**
-- **Node.js 18+** & **npm**
-- **MySQL/PostgreSQL** (Running locally and configured in your `.env` file)
-
----
 
 ## 1. Starting the Backend (FastAPI)
 
-The backend powers the APIs, authentication, and database interactions.
+
 
 1. Open a new terminal and navigate to the backend directory:
    ```powershell
@@ -30,20 +19,7 @@ The backend powers the APIs, authentication, and database interactions.
    pip install -r requirements.txt
    ```
 
-4. **(Optional but Recommended)** Apply the latest database migrations:
-   ```powershell
-   alembic upgrade head
-   ```
-
-5. **CRITICAL: Seed the Database**
-   This script resets the database, clearing out old data, and seeds it with a realistic, relational ecosystem (domains, projects, mentors, students).
-   ```powershell
-   python scripts/seed_db.py
-   ```
-   > [!WARNING]
-   > The seed script is destructive and will truncate existing tables. It has safety checks preventing it from running in a production environment.
-
-6. Start the FastAPI development server:
+4. Start the FastAPI development server:
    ```powershell
    uvicorn app.main:app --reload
    ```

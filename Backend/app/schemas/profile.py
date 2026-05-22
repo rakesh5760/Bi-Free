@@ -21,6 +21,9 @@ class StudentProfileCreate(StudentProfileBase):
 class StudentProfile(StudentProfileBase, ProfileTimestamp):
     profile_id: int
     user_id: int
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    email: Optional[str] = None
     level: Optional[Level] = None
     skills: List[Skill] = []
     class Config:

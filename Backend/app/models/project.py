@@ -67,6 +67,13 @@ class ProjectAllocation(Base, TimestampMixin, SoftDeleteMixin):
     mentor = relationship("MentorProfile", back_populates="allocations")
     team_members = relationship("TeamMember", back_populates="allocation", cascade="all, delete-orphan")
 
+    @property
+    def mentor_name(self) -> str:
+        if self.mentor and self.mentor.user:
+            return f"{self.mentor.user.first_name} {self.mentor.user.last_name}"
+        return "Unknown"
+
+
 
 class TeamMember(Base, TimestampMixin, SoftDeleteMixin):
     __tablename__ = "team_members"
@@ -78,6 +85,13 @@ class TeamMember(Base, TimestampMixin, SoftDeleteMixin):
 
     allocation = relationship("ProjectAllocation", back_populates="team_members")
     student = relationship("StudentProfile", back_populates="team_memberships")
+
+    @property
+    def student_name(self) -> str:
+        if self.student and self.student.user:
+            return f"{self.student.user.first_name} {self.student.user.last_name}"
+        return "Unknown"
+
 
 
 class Task(Base, TimestampMixin, SoftDeleteMixin):
