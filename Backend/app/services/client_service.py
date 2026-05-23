@@ -108,3 +108,29 @@ class ClientService:
         self.db.commit()
         self.db.refresh(submission)
         return submission
+
+    def revoke_project(self, user_id: int, project_id: int, reason: str) -> Project:
+        """
+        Client revokes a pending project with a reason.
+        """
+        from app.models.profile import ClientProfile
+        client_profile = self.db.query(ClientProfile).filter(ClientProfile.user_id == user_id).first()
+        if not client_profile:
+            raise HTTPException(status_code=404, detail="Client profile not found.")
+
+        project = self.db.query(Project).filter(Project.project_id == project_id).first()
+        
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found.")
+            
+        if project.client_id != client_profile.profile_id:
+            raise HTTPException(status_code=403, detail="Not authorized to revoke this project.")
+            
+        if project.status != ProjectStatus.PENDING:
+            raise HTTPException(status_code=400, detail=f"Cannot revoke project. Current status is {project.status}.")
+            
+        project.status = ProjectStatus.REVOKED
+        project.revocation_reason = reason
+        self.db.commit()
+        self.db.refresh(project)
+        return project

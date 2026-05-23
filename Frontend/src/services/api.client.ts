@@ -49,5 +49,9 @@ export const clientApi = {
   reviewQA: async (submissionId: number, approve: boolean) => {
     const response = await api.post(`/clients/qa-submissions/${submissionId}/review`, { approve });
     return response.data;
+  },
+  revokeProject: async (projectId: number, reason: string) => {
+    const response = await api.post(`/clients/me/projects/${projectId}/revoke`, { reason });
+    return response.data;
   }
 };

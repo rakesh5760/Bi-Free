@@ -9,7 +9,7 @@ from app.auth.permissions import RoleChecker
 from app.models.user import User
 from app.utils.responses import success_response, StandardResponse, PaginatedResponse
 from app.services.client_service import ClientService
-from app.schemas.project import Project, ProjectCreate
+from app.schemas.project import Project, ProjectCreate, ProjectRevokeRequest
 
 router = APIRouter()
 
@@ -59,3 +59,17 @@ def client_review_qa(
     svc = ClientService(db)
     submission = svc.approve_qa_submission(current_user.user_id, submission_id, request.approve)
     return success_response(data=submission, message="Client QA review completed.")
+
+@router.post("/me/projects/{project_id}/revoke", response_model=StandardResponse[Project])
+def revoke_project(
+    project_id: int,
+    request: ProjectRevokeRequest,
+    current_user: User = Depends(client_checker),
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Client revokes a pending project.
+    """
+    svc = ClientService(db)
+    project = svc.revoke_project(current_user.user_id, project_id, request.reason)
+    return success_response(data=project, message="Project has been revoked.")

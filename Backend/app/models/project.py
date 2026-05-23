@@ -10,6 +10,7 @@ class ProjectStatus(str, enum.Enum):
     IN_PROGRESS = "In Progress"
     MENTOR_QA = "Mentor QA"
     COMPLETED = "Completed"
+    REVOKED = "Revoked"
 
 class TaskStatus(str, enum.Enum):
     TO_DO = "To Do"
@@ -46,6 +47,7 @@ class Project(Base, TimestampMixin, SoftDeleteMixin):
     budget = Column(Numeric(10, 2), nullable=False)
     status = Column(Enum(ProjectStatus), default=ProjectStatus.PENDING, index=True)
     deadline = Column(Date)
+    revocation_reason = Column(Text, nullable=True)
 
     client = relationship("ClientProfile", back_populates="projects")
     domain = relationship("Domain")

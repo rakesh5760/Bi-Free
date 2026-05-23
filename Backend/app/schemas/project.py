@@ -10,6 +10,7 @@ class ProjectStatus(str, Enum):
     IN_PROGRESS = "In Progress"
     MENTOR_QA = "Mentor QA"
     COMPLETED = "Completed"
+    REVOKED = "Revoked"
 
 class TaskStatus(str, Enum):
     TO_DO = "To Do"
@@ -55,11 +56,15 @@ class ProjectBase(BaseModel):
     budget: float
     status: ProjectStatus = ProjectStatus.PENDING
     deadline: Optional[date] = None
+    revocation_reason: Optional[str] = None
 
 class ProjectCreate(ProjectBase):
     client_id: int
     domain_id: Optional[int] = None
     skill_ids: Optional[List[int]] = None
+
+class ProjectRevokeRequest(BaseModel):
+    reason: str
 
 class Project(ProjectBase):
     project_id: int
