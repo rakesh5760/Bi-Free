@@ -80,6 +80,8 @@ class TeamMember(TeamMemberBase):
     allocation_id: int
     student_id: int
     student_name: Optional[str] = None
+    student_email: Optional[str] = None
+    student_phone: Optional[str] = None
     created_at: datetime
     class Config:
         from_attributes = True
@@ -97,6 +99,8 @@ class ProjectAllocation(ProjectAllocationBase):
     project_id: int
     mentor_id: int
     mentor_name: Optional[str] = None
+    mentor_email: Optional[str] = None
+    mentor_phone: Optional[str] = None
     team_members: List[TeamMember] = []
     created_at: datetime
     class Config:

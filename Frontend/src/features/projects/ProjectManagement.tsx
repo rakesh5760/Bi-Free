@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../..
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Avatar, AvatarFallback } from "../../components/ui/avatar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../components/ui/tooltip";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../components/ui/dropdown-menu";
 import { DashboardLayout } from "../../layouts/DashboardLayout";
 import { StudentSidebar } from "../student-dashboard/components/StudentSidebar";
@@ -35,6 +37,7 @@ export default function ProjectManagement() {
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [projectDetails, setProjectDetails] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
 
   const fetchProjects = async () => {
     try {
@@ -124,12 +127,14 @@ export default function ProjectManagement() {
 
   const columns = getColumns();
 
-  const teamMembers = [
-    { name: "Priya Sharma", initials: "PS", role: "Frontend Lead", active: true },
-    { name: "Vikram Reddy", initials: "VR", role: "Backend Lead", active: true },
-    { name: "Anjali Patel", initials: "AP", role: "Full Stack", active: false },
-    { name: "Rahul Singh", initials: "RS", role: "DevOps", active: true },
-  ];
+  const teamMembers = projectDetails?.allocation?.team_members?.map((m: any) => ({
+    name: m.student_name,
+    email: m.student_email,
+    phone: m.student_phone,
+    initials: m.student_name.split(' ').map((n: string) => n[0]).join('').substring(0, 2),
+    role: "Member",
+    active: true
+  })) || [];
 
   return (
     <DashboardLayout sidebar={<Sidebar />} title="Project Execution">
@@ -168,14 +173,67 @@ export default function ProjectManagement() {
             <h2 className="text-2xl font-extrabold tracking-tight text-foreground">{projectDetails?.title || "Loading Project..."}</h2>
           </div>
           <div className="flex flex-wrap items-center gap-4">
+            {projectDetails?.allocation?.mentor_name && (
+              <div className="flex items-center gap-2 mr-2 pr-4 border-r border-border/50">
+                <div className="text-right hidden sm:block">
+                  <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Mentor</div>
+                  <div className="text-sm font-semibold">{projectDetails.allocation.mentor_name}</div>
+                </div>
+                <TooltipProvider delayDuration={100}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Avatar 
+                        className="h-10 w-10 border-2 border-background shadow-sm cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all"
+                        onClick={() => setSelectedUser({
+                          name: projectDetails.allocation.mentor_name,
+                          email: projectDetails.allocation.mentor_email,
+                          phone: projectDetails.allocation.mentor_phone,
+                          role: "Mentor Supervisor",
+                          initials: projectDetails.allocation.mentor_name.split(' ').map((n: string) => n[0]).join('').substring(0, 2),
+                          isMentor: true
+                        })}
+                      >
+                        <AvatarFallback className="bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white font-bold text-xs">
+                          {projectDetails.allocation.mentor_name.split(' ').map((n: string) => n[0]).join('').substring(0, 2)}
+                        </AvatarFallback>
+                      </Avatar>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="font-semibold">{projectDetails.allocation.mentor_name}</p>
+                      <p className="text-[10px] text-muted-foreground">Mentor Supervisor</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            )}
             <div className="flex -space-x-3">
-              {teamMembers.map((member, i) => (
-                <Avatar key={i} className="h-10 w-10 border-2 border-background shadow-sm transition-transform hover:-translate-y-1">
-                  <AvatarFallback className={`bg-gradient-to-br from-indigo-500 to-purple-500 text-white font-bold text-xs ${member.active ? '' : 'opacity-50 grayscale'}`}>
-                    {member.initials}
-                  </AvatarFallback>
-                </Avatar>
-              ))}
+              <TooltipProvider delayDuration={100}>
+                {teamMembers.map((member: any, i: number) => (
+                  <Tooltip key={i}>
+                    <TooltipTrigger asChild>
+                      <Avatar 
+                        className="h-10 w-10 border-2 border-background shadow-sm transition-transform hover:-translate-y-1 cursor-pointer hover:ring-2 hover:ring-primary/50"
+                        onClick={() => setSelectedUser({
+                          name: member.name || "Unknown Member",
+                          email: member.email,
+                          phone: member.phone,
+                          role: member.role || "Team Member",
+                          initials: member.initials,
+                          isMentor: false
+                        })}
+                      >
+                        <AvatarFallback className={`bg-gradient-to-br from-indigo-500 to-purple-500 text-white font-bold text-xs ${member.active ? '' : 'opacity-50 grayscale'}`}>
+                          {member.initials}
+                        </AvatarFallback>
+                      </Avatar>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="font-semibold">{member.name || "Unknown Member"}</p>
+                      <p className="text-[10px] text-muted-foreground">{member.role}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+              </TooltipProvider>
             </div>
             <div className="h-8 w-px bg-border/50 hidden md:block" />
             {selectedProjectId && (
@@ -289,6 +347,58 @@ export default function ProjectManagement() {
           ))}
         </motion.div>
       </motion.div>
+      )}
+
+      {selectedUser && (
+        <Dialog open={!!selectedUser} onOpenChange={(open) => !open && setSelectedUser(null)}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>{selectedUser.isMentor ? "Mentor Details" : "Team Member Details"}</DialogTitle>
+            </DialogHeader>
+            <div className="flex flex-col gap-4 py-4">
+              <div className="flex items-center gap-4">
+                <Avatar className="h-16 w-16 shadow-md">
+                  <AvatarFallback className={`bg-gradient-to-br ${selectedUser.isMentor ? 'from-violet-500 to-fuchsia-500' : 'from-indigo-500 to-purple-500'} text-white font-bold text-xl`}>
+                    {selectedUser.initials}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h3 className="text-xl font-bold">{selectedUser.name}</h3>
+                  <Badge variant="outline" className={`mt-1 ${selectedUser.isMentor ? 'text-violet-500 border-violet-500/30 bg-violet-500/10' : 'text-indigo-500 border-indigo-500/30 bg-indigo-500/10'}`}>
+                    {selectedUser.role}
+                  </Badge>
+                </div>
+              </div>
+              
+              <div className="space-y-3 mt-4">
+                <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg border border-border/50">
+                  <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Email</span>
+                  <span className="text-sm font-medium">{selectedUser.email || "NIL"}</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg border border-border/50">
+                  <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Phone</span>
+                  <span className="text-sm font-medium">{selectedUser.phone || "NIL"}</span>
+                </div>
+                
+                <div className="flex flex-col gap-1 p-3 bg-muted/20 rounded-lg border border-border/50">
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Project Role</span>
+                  <span className="text-sm font-medium">{selectedUser.isMentor ? "Supervises project execution, reviews pull requests, and provides QA feedback." : "Executes assigned tasks, submits pull requests, and collaborates with the team."}</span>
+                </div>
+                
+                {!selectedUser.isMentor && (
+                  <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg border border-border/50">
+                    <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Status</span>
+                    <span className="flex items-center gap-2 text-sm font-medium">
+                      <span className="h-2 w-2 rounded-full bg-emerald-500"></span> Active
+                    </span>
+                  </div>
+                )}
+              </div>
+              
+              <Button className="w-full mt-2" onClick={() => setSelectedUser(null)}>Close</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </DashboardLayout>
   );

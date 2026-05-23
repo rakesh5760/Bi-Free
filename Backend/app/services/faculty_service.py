@@ -44,14 +44,14 @@ class FacultyService:
         Binds a Mentor to a Client Project.
         """
         project = self.db.query(Project).filter(Project.project_id == project_id).first()
-        mentor = self.db.query(MentorProfile).filter(MentorProfile.profile_id == mentor_id).first()
+        mentor = self.db.query(MentorProfile).filter(MentorProfile.user_id == mentor_id).first()
         
         if not project or not mentor:
             raise HTTPException(status_code=404, detail="Project or Mentor not found.")
             
         existing_allocation = self.db.query(ProjectAllocation).filter(
             ProjectAllocation.project_id == project_id,
-            ProjectAllocation.mentor_id == mentor_id
+            ProjectAllocation.mentor_id == mentor.profile_id
         ).first()
         
         if existing_allocation:
@@ -59,7 +59,8 @@ class FacultyService:
             
         allocation = ProjectAllocation(
             project_id=project_id,
-            mentor_id=mentor_id
+            mentor_id=mentor.profile_id,
+            team_name=f"Team {project_id}-{mentor.profile_id}"
         )
         self.db.add(allocation)
         self.db.commit()
@@ -100,3 +101,37 @@ class FacultyService:
         self.db.commit()
         self.db.refresh(team_member)
         return team_member
+
+    def revoke_project_allocation(self, allocation_id: int):
+        """
+        Faculty revokes an entire project allocation, resetting project to PENDING.
+        """
+        allocation = self.db.query(ProjectAllocation).filter(ProjectAllocation.allocation_id == allocation_id).first()
+        if not allocation:
+            raise HTTPException(status_code=404, detail="Allocation not found.")
+        
+        # Reset project status
+        project = self.db.query(Project).filter(Project.project_id == allocation.project_id).first()
+        if project:
+            from app.models.project import ProjectStatus
+            project.status = ProjectStatus.PENDING
+            
+        self.db.delete(allocation)
+        self.db.commit()
+        return {"success": True, "message": "Allocation revoked successfully."}
+
+    def remove_student_from_team(self, allocation_id: int, student_id: int):
+        """
+        Faculty removes a specific student from a team.
+        """
+        team_member = self.db.query(TeamMember).filter(
+            TeamMember.allocation_id == allocation_id,
+            TeamMember.student_id == student_id
+        ).first()
+        
+        if not team_member:
+            raise HTTPException(status_code=404, detail="Student is not on this team.")
+            
+        self.db.delete(team_member)
+        self.db.commit()
+        return {"success": True, "message": "Student removed from team."}

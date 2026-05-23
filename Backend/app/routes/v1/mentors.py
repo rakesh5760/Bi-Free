@@ -31,7 +31,7 @@ def get_global_projects(
     data = svc.get_global_projects(page, size, search)
     return PaginatedResponse(data=data)
 
-@router.get("/allocations/me", response_model=StandardResponse[List[ProjectAllocation]])
+@router.get("/allocations/me", response_model=StandardResponse[List[Project]])
 def get_my_allocations(
     current_user: User = Depends(mentor_checker),
     db: Session = Depends(get_db)

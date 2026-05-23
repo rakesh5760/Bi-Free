@@ -73,6 +73,18 @@ class ProjectAllocation(Base, TimestampMixin, SoftDeleteMixin):
             return f"{self.mentor.user.first_name} {self.mentor.user.last_name}"
         return "Unknown"
 
+    @property
+    def mentor_email(self) -> str:
+        if self.mentor and self.mentor.user:
+            return self.mentor.user.email
+        return "NIL"
+        
+    @property
+    def mentor_phone(self) -> str:
+        if self.mentor and self.mentor.user and self.mentor.user.phone_number:
+            return self.mentor.user.phone_number
+        return "NIL"
+
 
 
 class TeamMember(Base, TimestampMixin, SoftDeleteMixin):
@@ -91,6 +103,18 @@ class TeamMember(Base, TimestampMixin, SoftDeleteMixin):
         if self.student and self.student.user:
             return f"{self.student.user.first_name} {self.student.user.last_name}"
         return "Unknown"
+
+    @property
+    def student_email(self) -> str:
+        if self.student and self.student.user:
+            return self.student.user.email
+        return "NIL"
+        
+    @property
+    def student_phone(self) -> str:
+        if self.student and self.student.user and self.student.user.phone_number:
+            return self.student.user.phone_number
+        return "NIL"
 
 
 

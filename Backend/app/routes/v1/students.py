@@ -63,3 +63,15 @@ def get_eligible_projects(
     svc = StudentService(db)
     projects = svc.get_eligible_projects(current_user.user_id)
     return success_response(data=projects, message=f"Found {len(projects)} eligible projects.")
+
+@router.get("/me/allocations", response_model=StandardResponse[List[schemas.Project]])
+def get_my_allocations(
+    current_user: User = Depends(student_role_checker),
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Get a list of all assigned projects/allocations for the student.
+    """
+    svc = StudentService(db)
+    allocations = svc.get_my_allocations(current_user.user_id)
+    return success_response(data=allocations, message=f"Found {len(allocations)} assigned projects.")

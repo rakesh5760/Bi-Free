@@ -91,8 +91,11 @@ def seed():
         client_user = User(email="client@skillforge.edu", password_hash=pwd, first_name="TechStart", last_name="Corp", role_id=role_client.role_id, is_active=True)
         student_a = User(email="alex@student.edu", password_hash=pwd, first_name="Alex", last_name="Developer", role_id=role_student.role_id, is_active=True)
         student_c = User(email="junior@student.edu", password_hash=pwd, first_name="Junior", last_name="Coder", role_id=role_student.role_id, is_active=True)
+        student_fs1 = User(email="sam.fs@student.edu", password_hash=pwd, first_name="Sam", last_name="Fullstack", role_id=role_student.role_id, is_active=True)
+        student_fs2 = User(email="mia.web@student.edu", password_hash=pwd, first_name="Mia", last_name="WebDev", role_id=role_student.role_id, is_active=True)
+        student_fs3 = User(email="liam.stack@student.edu", password_hash=pwd, first_name="Liam", last_name="Stack", role_id=role_student.role_id, is_active=True)
         
-        db.add_all([faculty_user, mentor_user, mentor_ai, mentor_cyber, client_user, student_a, student_c])
+        db.add_all([faculty_user, mentor_user, mentor_ai, mentor_cyber, client_user, student_a, student_c, student_fs1, student_fs2, student_fs3])
         db.commit()
 
         print("Seeding Profiles...")
@@ -111,7 +114,17 @@ def seed():
         stu_c_prof = StudentProfile(user_id=student_c.user_id, level_id=level_c.level_id, trust_score=45.0)
         stu_c_prof.skills = [python_skill]
 
-        db.add_all([fac_prof, ment_prof, ment_ai_prof, ment_cyber_prof, client_prof, stu_a_prof, stu_c_prof])
+        # New Fullstack Students
+        stu_fs1_prof = StudentProfile(user_id=student_fs1.user_id, level_id=level_b.level_id, trust_score=75.0)
+        stu_fs1_prof.skills = [react_skill, fastapi_skill]
+
+        stu_fs2_prof = StudentProfile(user_id=student_fs2.user_id, level_id=level_a.level_id, trust_score=88.0)
+        stu_fs2_prof.skills = [react_skill, fastapi_skill]
+
+        stu_fs3_prof = StudentProfile(user_id=student_fs3.user_id, level_id=level_c.level_id, trust_score=35.0)
+        stu_fs3_prof.skills = [react_skill, fastapi_skill]
+
+        db.add_all([fac_prof, ment_prof, ment_ai_prof, ment_cyber_prof, client_prof, stu_a_prof, stu_c_prof, stu_fs1_prof, stu_fs2_prof, stu_fs3_prof])
         db.commit()
         
         # Refresh to get IDs
@@ -134,13 +147,14 @@ def seed():
         
         project2 = Project(
             client_id=client_prof.profile_id,
-            domain_id=ai.domain_id,
-            title="AI Support Chatbot",
-            description="Looking for an AI model integration.",
+            domain_id=web_dev.domain_id,
+            title="webdevelopment",
+            description="Looking for a web development team.",
             budget=3000.00,
             status=ProjectStatus.PENDING,
             deadline=datetime.utcnow().date() + timedelta(days=45)
         )
+        project2.required_skills = [react_skill, fastapi_skill]
         
         db.add_all([project1, project2])
         db.commit()
@@ -187,7 +201,10 @@ def seed():
         print("Mentor (AI): ai_mentor@skillforge.edu / password123")
         print("Mentor (Cyber): cyber_mentor@skillforge.edu / password123")
         print("Client: client@skillforge.edu / password123")
-        print("Student A: alex@student.edu / password123")
+        print("Student A (Level A): alex@student.edu / password123")
+        print("Student Sam (Level B): sam.fs@student.edu / password123")
+        print("Student Mia (Level A): mia.web@student.edu / password123")
+        print("Student Liam (Level C): liam.stack@student.edu / password123")
 
     except Exception as e:
         print(f"Error during seeding: {e}")

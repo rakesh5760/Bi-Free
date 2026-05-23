@@ -63,7 +63,7 @@ export function MentorOverview() {
 
   // Extract assigned students from allocations
   const assignedStudents = allocations.flatMap(a => 
-    (a.team_members || []).map((m: any) => ({
+    (a.allocation?.team_members || []).map((m: any) => ({
       name: m.student_name || "Unknown Student",
       project_id: a.project_id,
       created_at: m.created_at,
@@ -293,26 +293,28 @@ export function MentorOverview() {
           <Card className="bg-card/50 backdrop-blur-sm border-border/50 shadow-sm h-full">
             <CardHeader className="bg-muted/20 border-b border-border/50 pb-4">
               <CardTitle className="text-lg flex items-center gap-2">
-                <Activity className="h-5 w-5 text-blue-500" /> Action Inbox
+                <Activity className="h-5 w-5 text-blue-500" /> Allocated Projects
               </CardTitle>
-              <CardDescription>Code reviews & submissions</CardDescription>
+              <CardDescription>Your currently supervised projects</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y divide-border/50">
-                {[
-                  { student: "Priya Sharma", project: "E-commerce REST API", submitted: "2h ago", priority: "high", type: "Code Review" },
-                ].map((review, i) => (
+                {isLoading ? (
+                  <div className="p-8 flex justify-center"><Loader2 className="animate-spin h-6 w-6 text-blue-500" /></div>
+                ) : allocations.length === 0 ? (
+                  <div className="p-8 text-center text-muted-foreground font-medium">No allocated projects.</div>
+                ) : allocations.map((project: any, i: number) => (
                   <div key={i} className="p-4 hover:bg-muted/30 transition-colors">
                     <div className="flex items-start justify-between mb-2">
-                      <Badge variant="outline" className={`text-[10px] uppercase tracking-wider border-0 px-2 py-0.5 ${review.priority === 'high' ? 'bg-orange-500/10 text-orange-500' : 'bg-blue-500/10 text-blue-500'}`}>
-                        {review.type}
+                      <Badge variant="outline" className="text-[10px] uppercase tracking-wider border-0 px-2 py-0.5 bg-blue-500/10 text-blue-500">
+                        {project.domain?.name || "Web Dev"}
                       </Badge>
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase">{review.submitted}</span>
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase">{project.status}</span>
                     </div>
-                    <div className="font-bold text-sm text-foreground mb-1">{review.project}</div>
-                    <div className="text-xs font-medium text-muted-foreground mb-4">Submitted by {review.student}</div>
+                    <div className="font-bold text-sm text-foreground mb-1">{project.title}</div>
+                    <div className="text-xs font-medium text-muted-foreground mb-4">Team Name: {project.allocation?.team_name || "Unknown"}</div>
                     <Button size="sm" className="w-full h-8 text-xs font-bold shadow-sm" variant="default">
-                      Begin Evaluation
+                      Manage Project
                     </Button>
                   </div>
                 ))}

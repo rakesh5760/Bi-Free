@@ -34,19 +34,30 @@ class MentorService:
             "pages": pages
         }
 
-    def get_my_allocations(self, mentor_id: int) -> List[ProjectAllocation]:
+    def get_my_allocations(self, user_id: int) -> List[Project]:
         """
-        Get all project allocations explicitly assigned to this mentor.
+        Get all projects explicitly assigned to this mentor.
         """
-        return self.db.query(ProjectAllocation).filter(ProjectAllocation.mentor_id == mentor_id).all()
+        from app.models.profile import MentorProfile
+        mentor = self.db.query(MentorProfile).filter(MentorProfile.user_id == user_id).first()
+        if not mentor:
+            return []
+        allocations = self.db.query(ProjectAllocation).filter(ProjectAllocation.mentor_id == mentor.profile_id).all()
+        return [a.project for a in allocations]
 
-    def recruit_student_to_team(self, mentor_id: int, allocation_id: int, student_id: int) -> TeamMember:
+    def recruit_student_to_team(self, user_id: int, allocation_id: int, student_id: int) -> TeamMember:
         """
         Mentor recruits a Level A student to their assigned team.
         """
+        from app.models.profile import MentorProfile
+        mentor = self.db.query(MentorProfile).filter(MentorProfile.user_id == user_id).first()
+        
+        if not mentor:
+            raise HTTPException(status_code=403, detail="Mentor profile not found.")
+            
         allocation = self.db.query(ProjectAllocation).filter(
             ProjectAllocation.allocation_id == allocation_id,
-            ProjectAllocation.mentor_id == mentor_id
+            ProjectAllocation.mentor_id == mentor.profile_id
         ).first()
         
         if not allocation:
@@ -78,13 +89,19 @@ class MentorService:
         self.db.refresh(team_member)
         return team_member
 
-    def create_task_for_team(self, mentor_id: int, project_id: int, title: str, student_id: int) -> Task:
+    def create_task_for_team(self, user_id: int, project_id: int, title: str, student_id: int) -> Task:
         """
         Delegate a task strictly to an existing team member on a project managed by this mentor.
         """
+        from app.models.profile import MentorProfile
+        mentor = self.db.query(MentorProfile).filter(MentorProfile.user_id == user_id).first()
+        
+        if not mentor:
+            raise HTTPException(status_code=403, detail="Mentor profile not found.")
+            
         allocation = self.db.query(ProjectAllocation).filter(
             ProjectAllocation.project_id == project_id,
-            ProjectAllocation.mentor_id == mentor_id
+            ProjectAllocation.mentor_id == mentor.profile_id
         ).first()
         
         if not allocation:

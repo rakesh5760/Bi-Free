@@ -12,13 +12,25 @@ class ProjectService:
 
     def get_assigned_projects(self, user_id: int, role_name: str) -> List[Project]:
         if role_name.lower() == 'student':
-            members = self.db.query(TeamMember).filter(TeamMember.student_id == user_id).all()
+            from app.models.profile import StudentProfile
+            student = self.db.query(StudentProfile).filter(StudentProfile.user_id == user_id).first()
+            if not student:
+                return []
+            members = self.db.query(TeamMember).filter(TeamMember.student_id == student.profile_id).all()
             return [m.allocation.project for m in members if m.allocation]
         elif role_name.lower() == 'mentor':
-            allocations = self.db.query(ProjectAllocation).filter(ProjectAllocation.mentor_id == user_id).all()
+            from app.models.profile import MentorProfile
+            mentor = self.db.query(MentorProfile).filter(MentorProfile.user_id == user_id).first()
+            if not mentor:
+                return []
+            allocations = self.db.query(ProjectAllocation).filter(ProjectAllocation.mentor_id == mentor.profile_id).all()
             return [a.project for a in allocations]
         elif role_name.lower() == 'client':
-            return self.db.query(Project).filter(Project.client_id == user_id).all()
+            from app.models.profile import ClientProfile
+            client = self.db.query(ClientProfile).filter(ClientProfile.user_id == user_id).first()
+            if not client:
+                return []
+            return self.db.query(Project).filter(Project.client_id == client.profile_id).all()
         return []
 
     def get_project(self, project_id: int) -> Project:

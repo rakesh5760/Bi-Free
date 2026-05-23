@@ -68,7 +68,7 @@ export function StudentOverview() {
 
     async function fetchProjects() {
       try {
-        const res = await api.get('/projects/assigned');
+        const res = await api.get('/students/me/allocations');
         if (res.data.success) {
           setAssignedProjects(res.data.data);
         }

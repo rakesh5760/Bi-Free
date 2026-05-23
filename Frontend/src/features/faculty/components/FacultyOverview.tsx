@@ -6,7 +6,7 @@ import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "../../../components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter, DialogClose } from "../../../components/ui/dialog";
 import { Checkbox } from "../../../components/ui/checkbox";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
@@ -141,6 +141,34 @@ export function FacultyOverview() {
     }
   };
 
+  const handleRevokeAllocation = async (allocationId: number) => {
+    if (!confirm("Are you sure you want to revoke this entire allocation? The project will return to Pending.")) return;
+    try {
+      const res = await api.delete(`/faculty/allocations/${allocationId}`);
+      if (res.data.success) {
+        toast.success("Allocation revoked successfully.");
+        const projectsRes = await api.get('/mentors/projects/global');
+        if (projectsRes.data.success) setProjects(projectsRes.data.data.items || []);
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to revoke allocation");
+    }
+  };
+
+  const handleRemoveStudent = async (allocationId: number, studentId: number) => {
+    if (!confirm("Remove this student from the team?")) return;
+    try {
+      const res = await api.delete(`/faculty/allocations/${allocationId}/students/${studentId}`);
+      if (res.data.success) {
+        toast.success("Student removed successfully.");
+        const projectsRes = await api.get('/mentors/projects/global');
+        if (projectsRes.data.success) setProjects(projectsRes.data.data.items || []);
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to remove student");
+    }
+  };
+
   const totalProjects = (analytics?.active_projects || 0) + (analytics?.completed_projects || 0);
   const completionRate = totalProjects > 0 ? Math.round((analytics.completed_projects / totalProjects) * 100) : 100;
 
@@ -258,7 +286,7 @@ export function FacultyOverview() {
                   
                   // Filter students whose skills match the project's domain
                   const eligibleStudents = levelAStudents.filter(student => 
-                    student.skills?.some((s: any) => s.domain_id === project.domain_id)
+                    student.skills?.some((s: any) => s.domain_id === project.domain?.domain_id)
                   );
 
                   return (
@@ -362,7 +390,9 @@ export function FacultyOverview() {
                               ))}
                             </div>
                             <DialogFooter>
-                              <Button variant="default">Done</Button>
+                              <DialogClose asChild>
+                                <Button variant="default">Done</Button>
+                              </DialogClose>
                             </DialogFooter>
                           </DialogContent>
                         </Dialog>
@@ -419,7 +449,33 @@ export function FacultyOverview() {
                           <Badge variant={active.status === "Mentor QA" ? "default" : "secondary"} className={`uppercase tracking-wider text-[10px] px-2 py-0.5 border`}>
                             {active.status}
                           </Badge>
-                          <Button size="sm" variant="ghost" className="font-semibold text-muted-foreground hover:text-foreground">Manage</Button>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button size="sm" variant="ghost" className="font-semibold text-muted-foreground hover:text-foreground">Manage</Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Manage Project: {active.title}</DialogTitle>
+                                <DialogDescription>Supervising Mentor: {active.allocation?.mentor_name}</DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4 py-4">
+                                <h4 className="font-semibold text-sm">Assigned Students</h4>
+                                {active.allocation?.team_members?.length === 0 ? (
+                                  <p className="text-sm text-muted-foreground">No students assigned to this team yet.</p>
+                                ) : (
+                                  active.allocation?.team_members?.map((tm: any) => (
+                                    <div key={tm.student_id} className="flex justify-between items-center bg-muted/30 p-2 rounded border">
+                                      <span className="text-sm font-medium">{tm.student_name}</span>
+                                      <Button size="sm" variant="destructive" className="h-7 text-xs" onClick={() => handleRemoveStudent(active.allocation.allocation_id, tm.student_id)}>Remove</Button>
+                                    </div>
+                                  ))
+                                )}
+                              </div>
+                              <DialogFooter>
+                                <Button variant="destructive" onClick={() => handleRevokeAllocation(active.allocation.allocation_id)}>Revoke Entire Allocation</Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
                         </div>
                       </div>
                     );
@@ -506,7 +562,17 @@ export function FacultyOverview() {
                     </div>
                     <div className="space-y-2">
                       <Label>Domain Specialization</Label>
-                      <Input required value={inviteForm.domain} onChange={e => setInviteForm({...inviteForm, domain: e.target.value})} placeholder="e.g. Web Development" />
+                      <Select required value={inviteForm.domain} onValueChange={val => setInviteForm({...inviteForm, domain: val})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a domain" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Web Development">Web Development</SelectItem>
+                          <SelectItem value="Artificial Intelligence">Artificial Intelligence</SelectItem>
+                          <SelectItem value="Cyber Security">Cyber Security</SelectItem>
+                          <SelectItem value="Data Science">Data Science</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <DialogFooter className="mt-6">
                       <Button type="button" variant="ghost" onClick={() => setIsInviteOpen(false)}>Cancel</Button>

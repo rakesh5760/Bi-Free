@@ -100,3 +100,13 @@ class StudentService:
                 eligible.append(project)
 
         return eligible
+
+    def get_my_allocations(self, user_id: int):
+        profile = self.get_profile(user_id)
+        from app.models.project import ProjectAllocation, TeamMember
+        
+        # Find all allocations where this student is a team member
+        allocations = self.db.query(ProjectAllocation).join(TeamMember).filter(
+            TeamMember.student_id == profile.profile_id
+        ).all()
+        return [a.project for a in allocations]

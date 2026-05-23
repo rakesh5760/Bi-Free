@@ -66,3 +66,30 @@ def add_student_to_team(
     svc = FacultyService(db)
     team_member = svc.add_student_to_team(allocation_id, request.student_id)
     return success_response(data=team_member, message="Student added to team.")
+
+@router.delete("/allocations/{allocation_id}", response_model=StandardResponse)
+def revoke_allocation(
+    allocation_id: int,
+    current_user: User = Depends(faculty_checker),
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Revoke an entire project allocation.
+    """
+    svc = FacultyService(db)
+    res = svc.revoke_project_allocation(allocation_id)
+    return success_response(message=res["message"])
+
+@router.delete("/allocations/{allocation_id}/students/{student_id}", response_model=StandardResponse)
+def remove_student(
+    allocation_id: int,
+    student_id: int,
+    current_user: User = Depends(faculty_checker),
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Remove a student from a team.
+    """
+    svc = FacultyService(db)
+    res = svc.remove_student_from_team(allocation_id, student_id)
+    return success_response(message=res["message"])

@@ -7,20 +7,7 @@
 1. Open a new terminal and navigate to the backend directory:
    ```powershell
    cd Backend
-   ```
-2. Activate your virtual environment:
-   ```powershell
-   .\venv\Scripts\Activate.ps1
-   ```
-   *(On Mac/Linux: `source venv/bin/activate`)*
-
-3. Ensure your dependencies are up to date:
-   ```powershell
-   pip install -r requirements.txt
-   ```
-
-4. Start the FastAPI development server:
-   ```powershell
+  .\venv\Scripts\Activate.ps1
    uvicorn app.main:app --reload
    ```
    *The backend will now be running at `http://localhost:8000`*
@@ -35,13 +22,6 @@ The frontend is a React Single Page Application (SPA) styled with TailwindCSS an
 1. Open a **second** terminal and navigate to the frontend directory:
    ```powershell
    cd Frontend
-   ```
-2. Install the necessary node modules (if you haven't already):
-   ```powershell
-   npm install
-   ```
-3. Start the Vite development server:
-   ```powershell
    npm run dev
    ```
    *The frontend will now be accessible at `http://localhost:5173`*
