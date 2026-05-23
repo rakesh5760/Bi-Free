@@ -17,6 +17,12 @@ class TaskStatus(str, Enum):
     REVIEW = "Review"
     DONE = "Done"
 
+class SubmissionStatus(str, Enum):
+    PENDING = "Pending"
+    MENTOR_APPROVED = "Mentor Approved"
+    CLIENT_REVIEWED = "Client Reviewed"
+    REJECTED = "Rejected"
+
 class TaskPriority(str, Enum):
     LOW = "Low"
     MEDIUM = "Medium"
@@ -64,6 +70,26 @@ class Project(ProjectBase):
     updated_at: datetime
     tasks: List[Task] = []
     allocation: Optional["ProjectAllocation"] = None
+    qa_submissions: List["QualityAssuranceSubmission"] = []
+    class Config:
+        from_attributes = True
+
+# Quality Assurance Submission
+class QualityAssuranceSubmissionBase(BaseModel):
+    title: str
+    status: SubmissionStatus = SubmissionStatus.PENDING
+    asset_url: Optional[str] = None
+
+class QualityAssuranceSubmissionCreate(QualityAssuranceSubmissionBase):
+    project_id: int
+    submitted_by: int
+
+class QualityAssuranceSubmission(QualityAssuranceSubmissionBase):
+    submission_id: int
+    project_id: int
+    submitted_by: int
+    created_at: datetime
+    updated_at: datetime
     class Config:
         from_attributes = True
 
@@ -98,6 +124,7 @@ class ProjectAllocation(ProjectAllocationBase):
     allocation_id: int
     project_id: int
     mentor_id: int
+    team_name: str
     mentor_name: Optional[str] = None
     mentor_email: Optional[str] = None
     mentor_phone: Optional[str] = None

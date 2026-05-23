@@ -33,3 +33,21 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Client Dashboard APIs
+export interface ClientProjectParams {
+  page?: number;
+  size?: number;
+  search?: string;
+}
+
+export const clientApi = {
+  getProjects: async (params?: ClientProjectParams) => {
+    const response = await api.get('/clients/me/projects', { params });
+    return response.data; // Expected format: PaginatedResponse[Project]
+  },
+  reviewQA: async (submissionId: number, approve: boolean) => {
+    const response = await api.post(`/clients/qa-submissions/${submissionId}/review`, { approve });
+    return response.data;
+  }
+};

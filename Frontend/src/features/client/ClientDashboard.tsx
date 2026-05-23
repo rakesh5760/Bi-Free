@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router";
 import { DashboardLayout } from "../../layouts/DashboardLayout";
 import { ClientSidebar } from "./components/ClientSidebar";
 import { ClientOverview } from "./components/ClientOverview";
+import { ClientProjects } from "./components/ClientProjects";
 import { PlaceholderPage } from "../../components/PlaceholderPage";
 
 export default function ClientDashboard() {
@@ -12,7 +13,7 @@ export default function ClientDashboard() {
         
         <Route 
           path="projects" 
-          element={<PlaceholderPage title="My Projects" description="View and manage all your active and past projects." />} 
+          element={<ClientProjects />} 
         />
         <Route 
           path="teams" 

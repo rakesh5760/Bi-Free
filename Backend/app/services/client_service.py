@@ -1,7 +1,7 @@
-from typing import List
-from sqlalchemy.orm import Session
+from typing import List, Optional
+from sqlalchemy.orm import Session, joinedload
 from fastapi import HTTPException, status
-from app.models.project import Project, ProjectStatus, QualityAssuranceSubmission, SubmissionStatus
+from app.models.project import Project, ProjectStatus, QualityAssuranceSubmission, SubmissionStatus, ProjectAllocation
 from app.models.core import Skill
 from app.schemas.project import ProjectCreate
 
@@ -9,12 +9,17 @@ class ClientService:
     def __init__(self, db: Session):
         self.db = db
 
-    def create_project(self, client_id: int, project_data: ProjectCreate) -> Project:
+    def create_project(self, user_id: int, project_data: ProjectCreate) -> Project:
         """
         Client posts a new project requirement.
         """
+        from app.models.profile import ClientProfile
+        client_profile = self.db.query(ClientProfile).filter(ClientProfile.user_id == user_id).first()
+        if not client_profile:
+            raise HTTPException(status_code=404, detail="Client profile not found.")
+
         project = Project(
-            client_id=client_id,
+            client_id=client_profile.profile_id,
             domain_id=project_data.domain_id,
             title=project_data.title,
             description=project_data.description,
@@ -32,11 +37,27 @@ class ClientService:
         self.db.refresh(project)
         return project
 
-    def get_my_projects(self, client_id: int, page: int = 1, size: int = 50, search: Optional[str] = None):
+    def get_my_projects(self, user_id: int, page: int = 1, size: int = 50, search: Optional[str] = None):
         """
         Client fetches all their posted projects.
         """
-        query = self.db.query(Project).filter(Project.client_id == client_id)
+        from app.models.profile import ClientProfile
+        client_profile = self.db.query(ClientProfile).filter(ClientProfile.user_id == user_id).first()
+        
+        if not client_profile:
+            return {
+                "items": [],
+                "total": 0,
+                "page": page,
+                "size": size,
+                "pages": 0
+            }
+
+        query = self.db.query(Project).options(
+            joinedload(Project.tasks),
+            joinedload(Project.allocation).joinedload(ProjectAllocation.team_members),
+            joinedload(Project.qa_submissions)
+        ).filter(Project.client_id == client_profile.profile_id)
         
         if search:
             query = query.filter(Project.title.ilike(f"%{search}%"))
@@ -53,11 +74,16 @@ class ClientService:
             "pages": pages
         }
 
-    def approve_qa_submission(self, client_id: int, submission_id: int, approve: bool) -> QualityAssuranceSubmission:
+    def approve_qa_submission(self, user_id: int, submission_id: int, approve: bool) -> QualityAssuranceSubmission:
         """
         Client performs the final review of a QA submission (Dual-stage approval).
         It must already be MENTOR_APPROVED.
         """
+        from app.models.profile import ClientProfile
+        client_profile = self.db.query(ClientProfile).filter(ClientProfile.user_id == user_id).first()
+        if not client_profile:
+            raise HTTPException(status_code=404, detail="Client profile not found.")
+
         submission = self.db.query(QualityAssuranceSubmission).filter(
             QualityAssuranceSubmission.submission_id == submission_id
         ).first()
@@ -65,7 +91,7 @@ class ClientService:
         if not submission:
             raise HTTPException(status_code=404, detail="QA Submission not found.")
             
-        if submission.project.client_id != client_id:
+        if submission.project.client_id != client_profile.profile_id:
             raise HTTPException(status_code=403, detail="Not authorized to review this submission.")
             
         if submission.status != SubmissionStatus.MENTOR_APPROVED:
