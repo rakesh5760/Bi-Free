@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 import { Briefcase, MessageSquare, Clock, DollarSign, Users, CheckCircle, ChevronRight, Activity, DownloadCloud, FileCheck, AlertCircle, RefreshCw } from "lucide-react";
 import { motion } from "motion/react";
 import { formatDistanceToNow, format } from "date-fns";
@@ -27,6 +28,7 @@ export function ClientOverview() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tabFilter, setTabFilter] = useState("all");
+  const navigate = useNavigate();
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -281,7 +283,7 @@ export function ClientOverview() {
                           <MessageSquare className="mr-2 h-4 w-4" />
                           Message Team
                         </Button>
-                        <Button size="sm" className="font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm">View Workboard <ChevronRight className="ml-1 h-4 w-4" /></Button>
+                        <Button onClick={() => navigate('/client/projects')} size="sm" className="font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm">View Workboard <ChevronRight className="ml-1 h-4 w-4" /></Button>
                       </div>
                     </div>
                   </div>

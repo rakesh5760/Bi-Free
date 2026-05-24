@@ -4,6 +4,8 @@ import { FacultySidebar } from "./components/FacultySidebar";
 import { FacultyOverview } from "./components/FacultyOverview";
 import { FacultyStudentManagement } from "./components/FacultyStudentManagement";
 import { FacultyMentorDirectory } from "./components/FacultyMentorDirectory";
+import { FacultyAllocations } from "./components/FacultyAllocations";
+import { FacultySettings } from "./components/FacultySettings";
 import { PlaceholderPage } from "../../components/PlaceholderPage";
 
 export default function FacultyDashboard() {
@@ -22,7 +24,11 @@ export default function FacultyDashboard() {
         />
         <Route 
           path="allocations" 
-          element={<PlaceholderPage title="Project Allocations" description="Allocate students and mentors to client projects." />} 
+          element={<FacultyAllocations />} 
+        />
+        <Route 
+          path="settings" 
+          element={<FacultySettings />} 
         />
         <Route 
           path="reports" 

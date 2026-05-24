@@ -47,8 +47,11 @@ export function FacultySidebar() {
         })}
 
         <div className="mt-8 mb-2 ml-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">System</div>
-        <Link to="/settings" className="block">
-          <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground transition-all duration-200">
+        <Link to="/faculty/settings" className="block">
+          <Button
+            variant={location.pathname === "/faculty/settings" ? "secondary" : "ghost"}
+            className={`w-full justify-start transition-all duration-200 ${location.pathname === "/faculty/settings" ? 'bg-indigo-500/10 text-indigo-600 hover:bg-indigo-500/15 font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
+          >
             <Settings className="mr-3 h-4 w-4" />
             Platform Settings
           </Button>

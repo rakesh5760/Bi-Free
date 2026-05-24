@@ -1,14 +1,20 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router";
 import { Briefcase, Clock, DollarSign, Users, RefreshCw, AlertCircle, Calendar, XCircle, Mail, Phone, CheckCircle } from "lucide-react";
+import { toast } from "sonner";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import { clientApi } from "../../../services/api.client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../../../components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "../../../components/ui/dialog";
 import { Textarea } from "../../../components/ui/textarea";
+import { Input } from "../../../components/ui/input";
+import { Label } from "../../../components/ui/label";
+import { PlusCircle } from "lucide-react";
 
 export function ClientProjects() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -17,6 +23,25 @@ export function ClientProjects() {
   const [selectedProjectToRevoke, setSelectedProjectToRevoke] = useState<any | null>(null);
   const [revokeReason, setRevokeReason] = useState("");
   const [isRevoking, setIsRevoking] = useState(false);
+
+  const [isPostOpen, setIsPostOpen] = useState(false);
+  const [isPosting, setIsPosting] = useState(false);
+  const [newProject, setNewProject] = useState({ title: '', description: '', budget: '', deadline: '' });
+
+  useEffect(() => {
+    if (searchParams.get("post") === "true") {
+      setIsPostOpen(true);
+    }
+  }, [searchParams]);
+
+  const setPostOpenState = (open: boolean) => {
+    setIsPostOpen(open);
+    if (!open && searchParams.get("post") === "true") {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("post");
+      setSearchParams(newParams, { replace: true });
+    }
+  };
 
   const fetchProjects = async () => {
     setLoading(true);
@@ -48,10 +73,51 @@ export function ClientProjects() {
       ));
       setSelectedProjectToRevoke(null);
       setRevokeReason("");
+      toast.success("Project has been revoked successfully.");
     } catch (err: any) {
-      alert(err.response?.data?.detail || "Failed to revoke project.");
+      console.error("Revoke project error:", err);
+      let errorMsg = "Failed to revoke project.";
+      if (err.response?.data?.detail) {
+        if (typeof err.response.data.detail === 'string') {
+          errorMsg = err.response.data.detail;
+        } else if (Array.isArray(err.response.data.detail)) {
+          errorMsg = err.response.data.detail.map((e: any) => e.msg).join(', ');
+        }
+      } else if (err.response?.data?.message) {
+        errorMsg = err.response.data.message;
+      } else if (err.message) {
+        errorMsg = err.message;
+      }
+      toast.error(errorMsg, {
+        description: "If the project is active or completed, it may not be revokable."
+      });
     } finally {
       setIsRevoking(false);
+    }
+  };
+
+  const handlePostProject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newProject.title.trim() || !newProject.budget) return;
+    
+    setIsPosting(true);
+    try {
+      const payload = {
+        title: newProject.title,
+        description: newProject.description,
+        budget: parseFloat(newProject.budget),
+        deadline: newProject.deadline || null
+      };
+      await clientApi.createProject(payload);
+      toast.success("Project posted successfully! It has been sent to the Faculty Dashboard.");
+      setPostOpenState(false);
+      setNewProject({ title: '', description: '', budget: '', deadline: '' });
+      fetchProjects();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.response?.data?.message || err.response?.data?.detail || "Failed to post project.");
+    } finally {
+      setIsPosting(false);
     }
   };
 
@@ -87,6 +153,76 @@ export function ClientProjects() {
           <h2 className="text-2xl font-bold tracking-tight text-foreground">My Projects</h2>
           <p className="text-muted-foreground">Manage and track all your posted projects.</p>
         </div>
+        <Dialog open={isPostOpen} onOpenChange={setPostOpenState}>
+          <DialogTrigger asChild>
+            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-md shadow-indigo-500/20">
+              <PlusCircle className="mr-2 h-5 w-5" /> Post New Project
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Post a New Project</DialogTitle>
+              <DialogDescription>
+                Provide the details of your project. Once posted, faculty will review it and allocate a team.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handlePostProject} className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="title">Project Title <span className="text-red-500">*</span></Label>
+                <Input 
+                  id="title" 
+                  required 
+                  placeholder="E.g. E-commerce Mobile App"
+                  value={newProject.title}
+                  onChange={(e) => setNewProject({ ...newProject, title: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea 
+                  id="description" 
+                  placeholder="Briefly describe your idea, features needed, etc."
+                  value={newProject.description}
+                  onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
+                  className="min-h-[100px]"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="budget">Budget ($) <span className="text-red-500">*</span></Label>
+                  <Input 
+                    id="budget" 
+                    type="number" 
+                    min="0" 
+                    step="0.01" 
+                    required 
+                    placeholder="E.g. 5000"
+                    value={newProject.budget}
+                    onChange={(e) => setNewProject({ ...newProject, budget: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="deadline">Deadline</Label>
+                  <Input 
+                    id="deadline" 
+                    type="date" 
+                    value={newProject.deadline}
+                    onChange={(e) => setNewProject({ ...newProject, deadline: e.target.value })}
+                  />
+                </div>
+              </div>
+              <DialogFooter className="mt-6">
+                <Button type="button" variant="outline" onClick={() => setPostOpenState(false)} disabled={isPosting}>
+                  Cancel
+                </Button>
+                <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white" disabled={!newProject.title.trim() || !newProject.budget || isPosting}>
+                  {isPosting ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  Submit Project
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {projects.length === 0 ? (
@@ -152,14 +288,14 @@ export function ClientProjects() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-2 mt-auto">
-                    <Button onClick={() => setSelectedProjectToView(project)} variant="outline" className="w-full font-semibold">View Details</Button>
-                    {project.status === "Pending" && (
-                      <Button onClick={() => setSelectedProjectToRevoke(project)} variant="outline" className="w-full font-semibold border-red-500/30 text-red-500 hover:bg-red-500/10">
-                        <XCircle className="w-4 h-4 mr-2" /> Revoke Project
-                      </Button>
-                    )}
-                  </div>
+                    <div className="flex flex-col gap-2 mt-auto">
+                      <Button onClick={() => setSelectedProjectToView(project)} variant="outline" className="w-full font-semibold">View Details</Button>
+                      {project.status !== "Completed" && project.status !== "Revoked" && (
+                        <Button onClick={() => setSelectedProjectToRevoke(project)} variant="outline" className="w-full font-semibold border-red-500/30 text-red-500 hover:bg-red-500/10">
+                          <XCircle className="w-4 h-4 mr-2" /> Revoke Project
+                        </Button>
+                      )}
+                    </div>
                 </CardContent>
               </Card>
             );

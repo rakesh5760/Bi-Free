@@ -46,6 +46,10 @@ export const clientApi = {
     const response = await api.get('/clients/me/projects', { params });
     return response.data; // Expected format: PaginatedResponse[Project]
   },
+  createProject: async (data: any) => {
+    const response = await api.post('/clients/me/projects', data);
+    return response.data;
+  },
   reviewQA: async (submissionId: number, approve: boolean) => {
     const response = await api.post(`/clients/qa-submissions/${submissionId}/review`, { approve });
     return response.data;

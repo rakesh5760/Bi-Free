@@ -59,7 +59,7 @@ class ProjectBase(BaseModel):
     revocation_reason: Optional[str] = None
 
 class ProjectCreate(ProjectBase):
-    client_id: int
+    client_id: Optional[int] = None
     domain_id: Optional[int] = None
     skill_ids: Optional[List[int]] = None
 

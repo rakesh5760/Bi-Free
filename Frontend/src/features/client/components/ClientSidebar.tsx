@@ -1,10 +1,12 @@
 import { Briefcase, Plus, MessageSquare, FileCheck, Home, Settings, HelpCircle, FileText } from "lucide-react";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent } from "../../../components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "../../../components/ui/dialog";
 
 export function ClientSidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
 
   const menuItems = [
     { icon: Home, label: "Dashboard", path: "/client" },
@@ -26,7 +28,10 @@ export function ClientSidebar() {
             <div className="text-xs font-medium text-emerald-500">Client Portal</div>
           </div>
         </div>
-        <Button className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-500/90 hover:to-teal-600/90 shadow-md font-bold h-11">
+        <Button 
+          onClick={() => navigate("/client/projects?post=true")}
+          className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-500/90 hover:to-teal-600/90 shadow-md font-bold h-11"
+        >
           <Plus className="mr-2 h-4 w-4" />
           Post New Project
         </Button>
@@ -65,10 +70,38 @@ export function ClientSidebar() {
           </div>
           <CardContent className="p-4 relative z-10">
             <div className="text-sm font-bold text-foreground mb-1">Need Assistance?</div>
-            <div className="text-xs text-muted-foreground mb-4 leading-relaxed">Contact your dedicated account manager.</div>
-            <Button size="sm" variant="outline" className="w-full border-emerald-500/30 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-colors shadow-sm font-semibold">
-              Support Center
-            </Button>
+            <div className="text-xs text-muted-foreground mb-4 leading-relaxed">
+              Contact your dedicated account manager for priority support.
+            </div>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button size="sm" variant="outline" className="w-full border-emerald-500/30 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-colors shadow-sm font-semibold">
+                  Support Center
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Account Manager</DialogTitle>
+                  <DialogDescription>
+                    Your dedicated account manager is available to assist you.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="flex flex-col gap-3 py-4">
+                  <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg border border-border/50">
+                    <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Name</span>
+                    <span className="text-sm font-bold">Sarah Jenkins</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg border border-border/50">
+                    <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Email</span>
+                    <a href="mailto:sarah@skillforge.edu" className="text-sm font-medium hover:underline text-emerald-600">sarah@skillforge.edu</a>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg border border-border/50">
+                    <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Phone</span>
+                    <span className="text-sm font-medium">+1 (800) 555-0199</span>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </CardContent>
         </Card>
       </div>

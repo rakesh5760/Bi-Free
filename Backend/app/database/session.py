@@ -52,6 +52,26 @@ def safe_migrate():
         result = conn.execute(text(db_name_query))
         db_name = result.scalar()
         
+        # Ensure projects.status ENUM includes 'REVOKED'
+        try:
+            status_col_query = text(
+                "SELECT COLUMN_TYPE FROM information_schema.COLUMNS "
+                "WHERE TABLE_SCHEMA = :db AND TABLE_NAME = 'projects' AND COLUMN_NAME = 'status'"
+            )
+            col_type = conn.execute(status_col_query, {"db": db_name}).scalar()
+            if col_type and "REVOKED" not in col_type:
+                print("[safe_migrate] Updating `projects.status` ENUM to include `REVOKED`...")
+                conn.execute(text(
+                    "ALTER TABLE projects MODIFY COLUMN status "
+                    "ENUM('PENDING','ASSIGNED','IN_PROGRESS','MENTOR_QA','COMPLETED','REVOKED') "
+                    "DEFAULT NULL"
+                ))
+                conn.commit()
+                print("[safe_migrate] Successfully updated `projects.status` ENUM.")
+        except Exception as e:
+            conn.rollback()
+            print(f"[safe_migrate] WARNING: Could not update `projects.status` ENUM: {e}")
+
         # ── Column additions ────────────────────────────────────────────────
         for table, column, col_def in columns_to_add:
             check_sql = text(

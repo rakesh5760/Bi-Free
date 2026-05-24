@@ -2,7 +2,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from app.models.profile import StudentProfile, MentorProfile
-from app.models.project import Project, ProjectAllocation, TeamMember
+from app.models.project import Project, ProjectStatus, ProjectAllocation, TeamMember
 from app.models.core import Level
 
 class FacultyService:
@@ -63,6 +63,7 @@ class FacultyService:
             team_name=f"Team {project_id}-{mentor.profile_id}"
         )
         self.db.add(allocation)
+        project.status = ProjectStatus.ASSIGNED
         self.db.commit()
         self.db.refresh(allocation)
         return allocation

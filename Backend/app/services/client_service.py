@@ -126,7 +126,7 @@ class ClientService:
         if project.client_id != client_profile.profile_id:
             raise HTTPException(status_code=403, detail="Not authorized to revoke this project.")
             
-        if project.status != ProjectStatus.PENDING:
+        if project.status in [ProjectStatus.COMPLETED, ProjectStatus.REVOKED]:
             raise HTTPException(status_code=400, detail=f"Cannot revoke project. Current status is {project.status}.")
             
         project.status = ProjectStatus.REVOKED
