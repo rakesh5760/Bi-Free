@@ -64,6 +64,11 @@ class UserProfileUpdate(BaseModel):
     github_handle: Optional[str] = None
     portfolio_url: Optional[str] = None
 
+class UpdatePasswordRequest(BaseModel):
+    old_password: str
+    new_password: str
+    confirm_password: str
+
 class UserProfileResponse(BaseModel):
     """Combined user + student-profile data returned by the profile endpoints."""
     user_id: int

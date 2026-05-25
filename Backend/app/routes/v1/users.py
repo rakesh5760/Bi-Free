@@ -8,8 +8,9 @@ from app.auth.permissions import RoleChecker
 from app.models.user import User
 from app.models.profile import StudentProfile, MentorProfile, ClientProfile, FacultyProfile
 from app.models.project import TeamMember, ProjectAllocation
-from app.schemas.user import UserProfileUpdate, UserProfileResponse, AdminUserDetail, AdminUsersResponse
+from app.schemas.user import UserProfileUpdate, UserProfileResponse, AdminUserDetail, AdminUsersResponse, UpdatePasswordRequest
 from app.utils.responses import success_response, StandardResponse
+from app.auth import security
 
 router = APIRouter()
 
@@ -93,6 +94,28 @@ def update_user_profile(
         data=_build_profile_response(current_user),
         message="Profile updated successfully."
     )
+
+
+@router.post("/me/password", response_model=StandardResponse)
+def update_password(
+    payload: UpdatePasswordRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> Any:
+    """Update current user password."""
+    if payload.new_password != payload.confirm_password:
+        raise HTTPException(status_code=400, detail="New passwords do not match")
+        
+    if payload.old_password == payload.new_password:
+        raise HTTPException(status_code=400, detail="New password cannot be the same as the old password")
+    
+    if not security.verify_password(payload.old_password, current_user.password_hash):
+        raise HTTPException(status_code=400, detail="Incorrect old password")
+        
+    current_user.password_hash = security.get_password_hash(payload.new_password)
+    db.commit()
+    
+    return success_response(message="Password updated successfully.")
 
 
 @router.get("/admin-dashboard", response_model=StandardResponse)

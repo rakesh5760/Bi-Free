@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import {
-  User, Mail, Phone, Github, Globe, Shield,
+  User, Mail, Phone, Github, Globe,
   Save, Loader2, CheckCircle2, AlertCircle,
-  GraduationCap, Star, Camera, LogOut
+  GraduationCap, Star, Camera
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useNavigate } from "react-router";
@@ -14,6 +14,9 @@ import { Avatar, AvatarFallback } from "../../components/ui/avatar";
 import { Progress } from "../../components/ui/progress";
 import { DashboardLayout } from "../../layouts/DashboardLayout";
 import { StudentSidebar } from "../student-dashboard/components/StudentSidebar";
+import { MentorSidebar } from "../mentor/components/MentorSidebar";
+import { FacultySidebar } from "../faculty/components/FacultySidebar";
+import { ClientSidebar } from "../client/components/ClientSidebar";
 import { useAuthStore } from "../../store/useAuthStore";
 import { api } from "../../services/api.client";
 
@@ -44,6 +47,11 @@ type SaveStatus = "idle" | "saving" | "success" | "error";
 export default function ProfilePage() {
   const { user, updateUser, logout } = useAuthStore();
   const navigate = useNavigate();
+
+  let Sidebar = StudentSidebar;
+  if (user?.role?.toLowerCase() === 'mentor') Sidebar = MentorSidebar;
+  if (user?.role?.toLowerCase() === 'faculty') Sidebar = FacultySidebar;
+  if (user?.role?.toLowerCase() === 'client') Sidebar = ClientSidebar;
 
   const [profile, setProfile] = useState<ProfileData>({
     first_name: "",
@@ -146,7 +154,7 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <DashboardLayout sidebar={<StudentSidebar />} title="My Profile">
+      <DashboardLayout sidebar={<Sidebar />} title="My Profile">
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
@@ -155,7 +163,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <DashboardLayout sidebar={<StudentSidebar />} title="My Profile">
+    <DashboardLayout sidebar={<Sidebar />} title="My Profile">
       <div className="max-w-4xl mx-auto space-y-6">
 
         {/* ── Profile hero card ─────────────────────────── */}
@@ -353,34 +361,6 @@ export default function ProfilePage() {
                   <><Save className="h-4 w-4 mr-2" /> Save Changes</>
                 )}
               </Button>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* ── Security / danger zone ───────────────────── */}
-        <motion.div custom={4} variants={fadeUp} initial="hidden" animate="visible">
-          <Card className="border border-border/50 bg-card/40 shadow-sm">
-            <CardHeader className="border-b border-border/40 pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg text-muted-foreground">
-                <Shield className="h-5 w-5" /> Account & Security
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl border border-destructive/20 bg-destructive/5">
-                <div>
-                  <h4 className="font-bold text-foreground">Log Out</h4>
-                  <p className="text-sm text-muted-foreground mt-0.5">
-                    You will be signed out and redirected to the login page.
-                  </p>
-                </div>
-                <Button
-                  variant="destructive"
-                  onClick={handleLogout}
-                  className="shrink-0 font-bold"
-                >
-                  <LogOut className="h-4 w-4 mr-2" /> Log Out
-                </Button>
-              </div>
             </CardContent>
           </Card>
         </motion.div>
