@@ -68,7 +68,7 @@ export default function ExamInterface() {
   ];
 
   useEffect(() => {
-    let timer: NodeJS.Timeout;
+    let timer: ReturnType<typeof setInterval>;
     if (examStarted && timeRemaining > 0) {
       timer = setInterval(() => {
         setTimeRemaining((prev) => prev - 1);

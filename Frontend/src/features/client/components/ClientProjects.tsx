@@ -18,6 +18,7 @@ export function ClientProjects() {
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showRevoked, setShowRevoked] = useState(false);
 
   const [selectedProjectToView, setSelectedProjectToView] = useState<any | null>(null);
   const [selectedProjectToRevoke, setSelectedProjectToRevoke] = useState<any | null>(null);
@@ -152,6 +153,14 @@ export function ClientProjects() {
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-foreground">My Projects</h2>
           <p className="text-muted-foreground">Manage and track all your posted projects.</p>
+          <div className="flex gap-2 mt-4">
+            <Button size="sm" variant={!showRevoked ? "default" : "outline"} onClick={() => setShowRevoked(false)} className={!showRevoked ? "bg-emerald-600 hover:bg-emerald-700" : ""}>
+              All Active
+            </Button>
+            <Button size="sm" variant={showRevoked ? "default" : "outline"} onClick={() => setShowRevoked(true)} className={showRevoked ? "bg-red-500 hover:bg-red-600 text-white" : ""}>
+              Revoked
+            </Button>
+          </div>
         </div>
         <Dialog open={isPostOpen} onOpenChange={setPostOpenState}>
           <DialogTrigger asChild>
@@ -189,7 +198,7 @@ export function ClientProjects() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="budget">Budget ($) <span className="text-red-500">*</span></Label>
+                  <Label htmlFor="budget">Budget (₹) <span className="text-red-500">*</span></Label>
                   <Input 
                     id="budget" 
                     type="number" 
@@ -225,17 +234,17 @@ export function ClientProjects() {
         </Dialog>
       </div>
 
-      {projects.length === 0 ? (
+      {projects.filter(p => showRevoked ? p.status === "Revoked" : p.status !== "Revoked").length === 0 ? (
         <Card className="bg-card/50 backdrop-blur-sm border-border/50">
           <CardContent className="flex flex-col items-center justify-center p-12 text-center">
             <Briefcase className="h-12 w-12 mb-4 text-muted-foreground opacity-50" />
             <h3 className="text-lg font-bold mb-2">No Projects Found</h3>
-            <p className="text-muted-foreground max-w-sm mb-6">You haven't posted any projects yet. Click the "Post New Project" button to get started.</p>
+            <p className="text-muted-foreground max-w-sm mb-6">There are no {showRevoked ? "revoked" : "active"} projects to display.</p>
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {projects.map((project, i) => {
+          {projects.filter(p => showRevoked ? p.status === "Revoked" : p.status !== "Revoked").map((project, i) => {
             const membersCount = project.allocation?.team_members?.length || 0;
             const teamName = project.allocation?.team_name || "Unassigned";
 
@@ -270,7 +279,7 @@ export function ClientProjects() {
                   <div className="space-y-4 mb-6">
                     <div className="flex items-center gap-3 text-sm text-muted-foreground">
                       <DollarSign className="h-4 w-4 text-emerald-500" />
-                      <span className="font-semibold text-foreground">${Number(project.budget).toLocaleString()}</span> Budget
+                      <span className="font-semibold text-foreground">₹{Number(project.budget).toLocaleString()}</span> Budget
                     </div>
                     
                     <div className="flex items-center gap-3 text-sm text-muted-foreground">

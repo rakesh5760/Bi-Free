@@ -10,10 +10,11 @@ import { api } from "../../../services/api.client";
 interface NewIssueModalProps {
   projectId: number;
   onIssueCreated: () => void;
+  status?: string;
   children?: React.ReactNode;
 }
 
-export function NewIssueModal({ projectId, onIssueCreated, children }: NewIssueModalProps) {
+export function NewIssueModal({ projectId, onIssueCreated, status, children }: NewIssueModalProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
@@ -27,7 +28,8 @@ export function NewIssueModal({ projectId, onIssueCreated, children }: NewIssueM
     try {
       await api.post(`/projects/${projectId}/tasks`, {
         title: title.trim(),
-        priority: priority
+        priority: priority,
+        status: status || "To Do"
       });
       setOpen(false);
       setTitle("");

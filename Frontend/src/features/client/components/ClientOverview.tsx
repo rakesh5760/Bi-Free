@@ -20,7 +20,7 @@ const staggerContainer = {
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" as const } }
 };
 
 export function ClientOverview() {
@@ -74,7 +74,9 @@ export function ClientOverview() {
 
   // Derived Metrics
   const activeProjects = projects.filter(p => p.status === "In Progress" || p.status === "Assigned" || p.status === "Mentor QA");
-  const totalSpent = projects.reduce((sum, p) => sum + (Number(p.budget) || 0), 0);
+  const totalSpent = projects
+    .filter(p => p.status !== "Revoked")
+    .reduce((sum, p) => sum + (Number(p.budget) || 0), 0);
   const completedProjects = projects.filter(p => p.status === "Completed");
   const activeTeamsSet = new Set(projects.filter(p => p.allocation).map(p => p.allocation.allocation_id));
   const activeTeamsCount = activeTeamsSet.size;
@@ -86,7 +88,7 @@ export function ClientOverview() {
   const displayProjects = projects.filter(p => {
     if (tabFilter === "progress") return p.status === "In Progress";
     if (tabFilter === "review") return p.status === "Mentor QA";
-    return true; // all
+    return p.status !== "Revoked";
   });
 
   // Extract QA Deliverables
@@ -165,7 +167,7 @@ export function ClientOverview() {
                 <DollarSign className="h-4 w-4 text-blue-500" />
               </div>
             </div>
-            <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">${totalSpent.toLocaleString()}</div>
+            <div className="text-3xl font-extrabold mb-2 text-foreground tracking-tight">₹{totalSpent.toLocaleString()}</div>
             <div className="text-xs font-medium text-muted-foreground">Lifetime</div>
           </CardContent>
         </Card>
@@ -254,7 +256,7 @@ export function ClientOverview() {
                           </span>
                           <span className="flex items-center gap-1.5 border-l border-border/50 pl-4 text-foreground">
                             <DollarSign className="h-4 w-4 text-muted-foreground" />
-                            ${Number(project.budget).toLocaleString()}
+                            ₹{Number(project.budget).toLocaleString()}
                           </span>
                         </div>
                       </div>

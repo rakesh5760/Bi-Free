@@ -24,11 +24,11 @@ const staggerContainer = {
 };
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" } }
+  visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" as const } }
 };
 const slideIn = {
   hidden: { opacity: 0, x: 40 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease: "easeOut" } }
+  visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease: "easeOut" as const } }
 };
 
 /* ─── types ──────────────────────────────────────────────── */

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
 import { Users, FileText, TrendingUp, Award, ArrowRight, Activity, CalendarCheck, CheckCircle2, Loader2 } from "lucide-react";
 import { motion } from "motion/react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
@@ -28,10 +29,11 @@ const staggerContainer = {
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" as const } }
 };
 
 export function MentorOverview() {
+  const navigate = useNavigate();
   const [analytics, setAnalytics] = useState<any>(null);
   const [allocations, setAllocations] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -313,7 +315,12 @@ export function MentorOverview() {
                     </div>
                     <div className="font-bold text-sm text-foreground mb-1">{project.title}</div>
                     <div className="text-xs font-medium text-muted-foreground mb-4">Team Name: {project.allocation?.team_name || "Unknown"}</div>
-                    <Button size="sm" className="w-full h-8 text-xs font-bold shadow-sm" variant="default">
+                    <Button 
+                      size="sm" 
+                      className="w-full h-8 text-xs font-bold shadow-sm" 
+                      variant="default"
+                      onClick={() => navigate(`/projects?id=${project.project_id}`)}
+                    >
                       Manage Project
                     </Button>
                   </div>

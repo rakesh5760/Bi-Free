@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, MessageSquare, Paperclip, MoreVertical, GitPullRequest, GitMerge, CheckCircle, Clock, CircleDot, AlertCircle, Play } from "lucide-react";
+import { Plus, MessageSquare, Paperclip, GitPullRequest, GitMerge, CheckCircle, Clock, CircleDot, AlertCircle, Play, Edit2, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
@@ -7,14 +7,15 @@ import { Button } from "../../components/ui/button";
 import { Avatar, AvatarFallback } from "../../components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../components/ui/tooltip";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../components/ui/dropdown-menu";
 import { DashboardLayout } from "../../layouts/DashboardLayout";
 import { StudentSidebar } from "../student-dashboard/components/StudentSidebar";
 import { MentorSidebar } from "../mentor/components/MentorSidebar";
 import { NewIssueModal } from "./components/NewIssueModal";
+import { EditIssueModal } from "./components/EditIssueModal";
 import { api } from "../../services/api.client";
 import { useEffect } from "react";
 import { useAuthStore } from "../../store/useAuthStore";
+import { useSearchParams } from "react-router";
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -26,7 +27,7 @@ const staggerContainer = {
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" as const } }
 };
 
 export default function ProjectManagement() {
@@ -38,12 +39,41 @@ export default function ProjectManagement() {
   const [projectDetails, setProjectDetails] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [editingTask, setEditingTask] = useState<any>(null);
+  const [showRevoked, setShowRevoked] = useState(false);
+  const [searchParams] = useSearchParams();
+  const queryProjectId = searchParams.get('id');
+
+  const displayProjects = projects.filter(p => showRevoked ? p.status === "Revoked" : p.status !== "Revoked");
+
+  useEffect(() => {
+    if (displayProjects.length > 0 && !displayProjects.some(p => p.project_id === selectedProjectId)) {
+      setSelectedProjectId(displayProjects[0].project_id);
+    } else if (displayProjects.length === 0) {
+      setSelectedProjectId(null);
+      setProjectDetails(null);
+    }
+  }, [showRevoked, projects]);
 
   const fetchProjects = async () => {
     try {
       const res = await api.get('/projects/assigned');
       if (res.data.success && res.data.data.length > 0) {
         setProjects(res.data.data);
+        
+        // If a specific project ID is requested via query param, select it
+        if (queryProjectId) {
+          const match = res.data.data.find((p: any) => p.project_id === Number(queryProjectId));
+          if (match) {
+            setSelectedProjectId(match.project_id);
+            if (match.status === "Revoked") {
+              setShowRevoked(true); // Automatically switch to revoked view if needed
+            }
+            return;
+          }
+        }
+        
+        // Otherwise default to first project
         setSelectedProjectId(res.data.data[0].project_id);
       }
     } catch (err) {
@@ -74,9 +104,9 @@ export default function ProjectManagement() {
     }
   }, [selectedProjectId]);
 
-  const updateTaskStatus = async (taskId: number, status: string) => {
+  const deleteTask = async (taskId: number) => {
     try {
-      await api.patch(`/projects/tasks/${taskId}/status`, { status });
+      await api.delete(`/projects/tasks/${taskId}`);
       if (selectedProjectId) fetchProjectDetails(selectedProjectId);
     } catch (err) {
       console.error(err);
@@ -138,14 +168,14 @@ export default function ProjectManagement() {
 
   return (
     <DashboardLayout sidebar={<Sidebar />} title="Project Execution">
-      {!loading && projects.length === 0 ? (
+      {!loading && displayProjects.length === 0 ? (
         <motion.div variants={fadeIn} className="flex flex-col items-center justify-center py-24 px-4 text-center">
           <div className="h-20 w-20 bg-primary/10 rounded-full flex items-center justify-center mb-6">
             <CircleDot className="h-10 w-10 text-primary opacity-50" />
           </div>
-          <h3 className="text-2xl font-extrabold tracking-tight mb-2">No Projects Assigned</h3>
+          <h3 className="text-2xl font-extrabold tracking-tight mb-2">No {showRevoked ? "Revoked" : "Active"} Projects</h3>
           <p className="text-muted-foreground max-w-md mx-auto">
-            You haven't been assigned to any projects yet. Please wait for a mentor to allocate you to a team, or complete your prerequisite learning modules.
+            {showRevoked ? "There are no revoked projects to display." : "You haven't been assigned to any active projects yet."}
           </p>
         </motion.div>
       ) : (
@@ -158,15 +188,19 @@ export default function ProjectManagement() {
           <motion.div variants={fadeIn} className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card/50 backdrop-blur-sm p-6 rounded-xl border border-border/50 shadow-sm">
           <div>
             <div className="flex items-center gap-3 mb-1">
-              {projects.length > 1 && (
+              {displayProjects.length > 0 && (
                 <select 
                   className="bg-background border rounded px-2 py-1 text-sm font-medium"
                   value={selectedProjectId || ""}
                   onChange={(e) => setSelectedProjectId(Number(e.target.value))}
                 >
-                  {projects.map(p => <option key={p.project_id} value={p.project_id}>{p.title}</option>)}
+                  {displayProjects.map(p => <option key={p.project_id} value={p.project_id}>{p.title}</option>)}
                 </select>
               )}
+              <div className="flex gap-1">
+                <Button size="sm" variant={!showRevoked ? "secondary" : "ghost"} onClick={() => setShowRevoked(false)} className="h-7 px-2 text-[10px] uppercase font-bold tracking-wider">Active</Button>
+                <Button size="sm" variant={showRevoked ? "secondary" : "ghost"} onClick={() => setShowRevoked(true)} className={`h-7 px-2 text-[10px] uppercase font-bold tracking-wider ${showRevoked ? "text-red-500 hover:text-red-600" : ""}`}>Revoked</Button>
+              </div>
               {projectDetails?.domain && <Badge variant="outline" className="text-[10px] uppercase tracking-wider font-bold shadow-sm">{projectDetails.domain.name}</Badge>}
               {projectDetails?.deadline && <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1"><Clock className="h-3 w-3" /> Due {new Date(projectDetails.deadline).toLocaleDateString()}</span>}
             </div>
@@ -268,20 +302,29 @@ export default function ProjectManagement() {
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between mb-2">
                             <span className="text-[10px] font-bold text-muted-foreground uppercase">TASK-{task.task_id}</span>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <MoreVertical className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => updateTaskStatus(task.task_id, 'To Do')} disabled={task.status === 'To Do'}>Move to To Do</DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => updateTaskStatus(task.task_id, 'In Progress')} disabled={task.status === 'In Progress'}>Move to In Progress</DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => updateTaskStatus(task.task_id, 'Review')} disabled={task.status === 'Review'}>Move to Review</DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => updateTaskStatus(task.task_id, 'Done')} disabled={task.status === 'Done'}>Move to Done</DropdownMenuItem>
-                                <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                            <div className="flex items-center gap-1">
+                              <TooltipProvider delayDuration={200}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" onClick={() => setEditingTask(task)} className="h-6 w-6 text-muted-foreground hover:text-primary transition-colors">
+                                      <Edit2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Edit Task</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                              
+                              <TooltipProvider delayDuration={200}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" onClick={() => deleteTask(task.task_id)} className="h-6 w-6 text-muted-foreground hover:text-destructive transition-colors">
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Delete Task</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
                           </div>
                           
                           <div className="font-semibold text-sm mb-4 leading-tight text-foreground">{task.title}</div>
@@ -335,7 +378,7 @@ export default function ProjectManagement() {
                 </AnimatePresence>
                 
                 {selectedProjectId && (
-                  <NewIssueModal projectId={selectedProjectId} onIssueCreated={() => fetchProjectDetails(selectedProjectId)}>
+                  <NewIssueModal projectId={selectedProjectId} onIssueCreated={() => fetchProjectDetails(selectedProjectId)} status={column.statusKey}>
                     <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:bg-muted/50 font-semibold text-sm border border-dashed border-border/50 bg-transparent" size="sm">
                       <Plus className="mr-2 h-4 w-4" />
                       Create Issue
@@ -399,6 +442,18 @@ export default function ProjectManagement() {
             </div>
           </DialogContent>
         </Dialog>
+      )}
+
+      {editingTask && (
+        <EditIssueModal 
+          task={editingTask} 
+          open={!!editingTask}
+          onOpenChange={(open) => !open && setEditingTask(null)}
+          onIssueUpdated={() => {
+            setEditingTask(null);
+            if (selectedProjectId) fetchProjectDetails(selectedProjectId);
+          }} 
+        />
       )}
     </DashboardLayout>
   );

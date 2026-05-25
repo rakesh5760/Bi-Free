@@ -139,7 +139,7 @@ export function FacultyAllocations() {
 
     if (!matchesSearch) return false;
 
-    if (statusTab === "all") return true;
+    if (statusTab === "all") return p.status !== "Revoked";
     return p.status?.toLowerCase() === statusTab.toLowerCase();
   });
 
@@ -204,7 +204,7 @@ export function FacultyAllocations() {
 
           <div className="flex gap-1.5 overflow-x-auto pb-1 md:pb-0">
             {[
-              { id: "all", label: `All (${allocatedProjects.length})` },
+              { id: "all", label: `All (${allocatedProjects.filter(p => p.status !== "Revoked").length})` },
               { id: "assigned", label: "Assigned" },
               { id: "in progress", label: "In Progress" },
               { id: "mentor qa", label: "Mentor QA" },
@@ -434,7 +434,7 @@ export function FacultyAllocations() {
                                       <Badge variant={
                                         task.status === "Done" ? "default" : 
                                         task.status === "Review" ? "secondary" : 
-                                        task.status === "In Progress" ? "outline" : "ghost"
+                                        task.status === "In Progress" ? "outline" : "secondary"
                                       } className={`text-[9px] uppercase font-bold shrink-0 ${
                                         task.status === "Done" ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" :
                                         task.status === "Review" ? "bg-amber-500/10 text-amber-600 border-amber-500/20" :

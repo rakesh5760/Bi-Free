@@ -39,18 +39,36 @@ class ProjectService:
             raise HTTPException(status_code=404, detail="Project not found")
         return project
 
-    def create_task(self, project_id: int, title: str, priority: str) -> Task:
+    def create_task(self, project_id: int, title: str, priority: str, status: TaskStatus = TaskStatus.TO_DO) -> Task:
         project = self.get_project(project_id)
-        task = Task(project_id=project_id, title=title, priority=priority, status=TaskStatus.TO_DO)
+        task = Task(project_id=project_id, title=title, priority=priority, status=status)
         self.db.add(task)
         self.db.commit()
         self.db.refresh(task)
         return task
 
+    def delete_task(self, task_id: int):
+        task = self.db.query(Task).filter(Task.task_id == task_id).first()
+        if not task:
+            raise HTTPException(status_code=404, detail="Task not found")
+        self.db.delete(task)
+        self.db.commit()
+
     def update_task_status(self, task_id: int, status: TaskStatus) -> Task:
         task = self.db.query(Task).filter(Task.task_id == task_id).first()
         if not task:
             raise HTTPException(status_code=404, detail="Task not found")
+        task.status = status
+        self.db.commit()
+        self.db.refresh(task)
+        return task
+
+    def update_task(self, task_id: int, title: str, priority: str, status: TaskStatus) -> Task:
+        task = self.db.query(Task).filter(Task.task_id == task_id).first()
+        if not task:
+            raise HTTPException(status_code=404, detail="Task not found")
+        task.title = title
+        task.priority = priority
         task.status = status
         self.db.commit()
         self.db.refresh(task)

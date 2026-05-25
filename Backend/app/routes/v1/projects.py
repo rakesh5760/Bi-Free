@@ -37,6 +37,7 @@ def get_project(
 class CreateTaskRequest(BaseModel):
     title: str
     priority: TaskPriority
+    status: TaskStatus = TaskStatus.TO_DO
 
 @router.post("/{project_id}/tasks", response_model=StandardResponse[Task])
 def create_project_task(
@@ -47,11 +48,28 @@ def create_project_task(
 ) -> Any:
     """Create a new task in a project."""
     svc = ProjectService(db)
-    task = svc.create_task(project_id, request.title, request.priority)
+    task = svc.create_task(project_id, request.title, request.priority, request.status)
     return success_response(data=task, message="Task created successfully.")
 
 class UpdateTaskStatusRequest(BaseModel):
     status: TaskStatus
+
+class UpdateTaskRequest(BaseModel):
+    title: str
+    priority: TaskPriority
+    status: TaskStatus
+
+@router.patch("/tasks/{task_id}", response_model=StandardResponse[Task])
+def update_task_details(
+    task_id: int,
+    request: UpdateTaskRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+) -> Any:
+    """Update task details (title, priority, status)."""
+    svc = ProjectService(db)
+    task = svc.update_task(task_id, request.title, request.priority, request.status)
+    return success_response(data=task, message="Task updated successfully.")
 
 @router.patch("/tasks/{task_id}/status", response_model=StandardResponse[Task])
 def update_task_status(
@@ -64,6 +82,17 @@ def update_task_status(
     svc = ProjectService(db)
     task = svc.update_task_status(task_id, request.status)
     return success_response(data=task, message=f"Task moved to {request.status}.")
+
+@router.delete("/tasks/{task_id}", response_model=StandardResponse)
+def delete_task(
+    task_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+) -> Any:
+    """Delete a task."""
+    svc = ProjectService(db)
+    svc.delete_task(task_id)
+    return success_response(message="Task deleted successfully.")
 
 student_checker = RoleChecker(["Student"])
 mentor_checker = RoleChecker(["Mentor", "Faculty", "Admin"])
