@@ -91,7 +91,7 @@ export function FacultyAllocations() {
   // Add students submit
   const handleAddStudentsSubmit = async () => {
     if (!currentAllocToModify || selectedStudentsToAdd.length === 0) return;
-    
+
     setIsSubmittingStudents(true);
     try {
       const allocationId = currentAllocToModify.allocation.allocation_id;
@@ -111,7 +111,7 @@ export function FacultyAllocations() {
   };
 
   const handleStudentCheckboxToggle = (studentId: number) => {
-    setSelectedStudentsToAdd(prev => 
+    setSelectedStudentsToAdd(prev =>
       prev.includes(studentId) ? prev.filter(id => id !== studentId) : [...prev, studentId]
     );
   };
@@ -127,14 +127,14 @@ export function FacultyAllocations() {
     const searchLower = searchTerm.toLowerCase();
 
     // Check if team members match search
-    const hasMatchingMember = p.allocation.team_members?.some((m: any) => 
+    const hasMatchingMember = p.allocation.team_members?.some((m: any) =>
       m.student_name?.toLowerCase().includes(searchLower)
     );
 
-    const matchesSearch = 
-      projectTitle.includes(searchLower) || 
-      description.includes(searchLower) || 
-      mentorName.includes(searchLower) || 
+    const matchesSearch =
+      projectTitle.includes(searchLower) ||
+      description.includes(searchLower) ||
+      mentorName.includes(searchLower) ||
       hasMatchingMember;
 
     if (!matchesSearch) return false;
@@ -216,11 +216,10 @@ export function FacultyAllocations() {
                 variant={statusTab === tab.id ? "secondary" : "ghost"}
                 size="sm"
                 onClick={() => setStatusTab(tab.id)}
-                className={`text-xs font-semibold h-8 rounded-lg ${
-                  statusTab === tab.id 
-                    ? "bg-indigo-500/10 text-indigo-600 hover:bg-indigo-500/15" 
+                className={`text-xs font-semibold h-8 rounded-lg ${statusTab === tab.id
+                    ? "bg-indigo-500/10 text-indigo-600 hover:bg-indigo-500/15"
                     : "text-muted-foreground hover:text-foreground"
-                }`}
+                  }`}
               >
                 {tab.label}
               </Button>
@@ -259,7 +258,7 @@ export function FacultyAllocations() {
             const isTasksExpanded = !!expandedTasks[project.project_id];
 
             // Get eligible students who aren't already on this team and whose skills match this domain
-            const eligibleStudents = levelAStudents.filter(student => 
+            const eligibleStudents = levelAStudents.filter(student =>
               student.skills?.some((s: any) => s.domain_id === project.domain?.domain_id) &&
               !project.allocation.team_members?.some((m: any) => m.student_id === student.profile_id)
             );
@@ -267,12 +266,11 @@ export function FacultyAllocations() {
             return (
               <Card key={project.project_id} className="bg-card/50 backdrop-blur-sm border-border/50 shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden relative">
                 {/* Accent Top Bar based on status */}
-                <div className={`absolute top-0 left-0 right-0 h-1 ${
-                  project.status === "Completed" ? "bg-emerald-500" :
-                  project.status === "Mentor QA" ? "bg-amber-500" :
-                  project.status === "In Progress" ? "bg-indigo-500" :
-                  project.status === "Revoked" ? "bg-red-500" : "bg-blue-500"
-                }`}></div>
+                <div className={`absolute top-0 left-0 right-0 h-1 ${project.status === "Completed" ? "bg-emerald-500" :
+                    project.status === "Mentor QA" ? "bg-amber-500" :
+                      project.status === "In Progress" ? "bg-indigo-500" :
+                        project.status === "Revoked" ? "bg-red-500" : "bg-blue-500"
+                  }`}></div>
 
                 <CardHeader className="border-b border-border/40 pb-5">
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
@@ -281,12 +279,11 @@ export function FacultyAllocations() {
                         <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-background shadow-sm border-border/50">
                           {project.domain?.name || "General Client"}
                         </Badge>
-                        <Badge className={`text-[10px] uppercase font-bold tracking-wider ${
-                          project.status === "Completed" ? "bg-emerald-500 text-white" :
-                          project.status === "Mentor QA" ? "bg-amber-500 text-white" :
-                          project.status === "In Progress" ? "bg-indigo-500 text-white" :
-                          project.status === "Revoked" ? "bg-red-500 text-white" : "bg-blue-500 text-white"
-                        }`}>
+                        <Badge className={`text-[10px] uppercase font-bold tracking-wider ${project.status === "Completed" ? "bg-emerald-500 text-white" :
+                            project.status === "Mentor QA" ? "bg-amber-500 text-white" :
+                              project.status === "In Progress" ? "bg-indigo-500 text-white" :
+                                project.status === "Revoked" ? "bg-red-500 text-white" : "bg-blue-500 text-white"
+                          }`}>
                           {project.status}
                         </Badge>
                       </div>
@@ -336,9 +333,9 @@ export function FacultyAllocations() {
                           <Users className="w-4 h-4 text-cyan-500" /> Assigned Student Team ({teamSize})
                         </h4>
                         {project.status !== "Completed" && project.status !== "Revoked" && (
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
+                          <Button
+                            size="sm"
+                            variant="ghost"
                             onClick={() => {
                               setCurrentAllocToModify(project);
                               setSelectedStudentsToAdd([]);
@@ -365,9 +362,9 @@ export function FacultyAllocations() {
                               <div className="flex items-center gap-2">
                                 {tm.role && <Badge variant="outline" className="text-[10px] font-semibold bg-background">{tm.role}</Badge>}
                                 {project.status !== "Completed" && project.status !== "Revoked" && (
-                                  <Button 
-                                    size="icon" 
-                                    variant="ghost" 
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
                                     onClick={() => handleRemoveStudent(project.allocation.allocation_id, tm.student_id)}
                                     className="h-7 w-7 text-red-500 hover:bg-red-500/10 hover:text-red-600 rounded-lg"
                                     title="Remove student from team"
@@ -432,14 +429,13 @@ export function FacultyAllocations() {
                                     <div className="flex justify-between items-start gap-2">
                                       <div className="font-bold text-foreground text-sm line-clamp-1">{task.title}</div>
                                       <Badge variant={
-                                        task.status === "Done" ? "default" : 
-                                        task.status === "Review" ? "secondary" : 
-                                        task.status === "In Progress" ? "outline" : "secondary"
-                                      } className={`text-[9px] uppercase font-bold shrink-0 ${
-                                        task.status === "Done" ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" :
-                                        task.status === "Review" ? "bg-amber-500/10 text-amber-600 border-amber-500/20" :
-                                        task.status === "In Progress" ? "bg-indigo-500/10 text-indigo-600 border-indigo-500/20" : ""
-                                      }`}>
+                                        task.status === "Done" ? "default" :
+                                          task.status === "Review" ? "secondary" :
+                                            task.status === "In Progress" ? "outline" : "secondary"
+                                      } className={`text-[9px] uppercase font-bold shrink-0 ${task.status === "Done" ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" :
+                                          task.status === "Review" ? "bg-amber-500/10 text-amber-600 border-amber-500/20" :
+                                            task.status === "In Progress" ? "bg-indigo-500/10 text-indigo-600 border-indigo-500/20" : ""
+                                        }`}>
                                         {task.status}
                                       </Badge>
                                     </div>
@@ -450,10 +446,9 @@ export function FacultyAllocations() {
                                     </p>
                                   </div>
                                   <div className="flex justify-between items-center text-[10px] font-bold border-t border-border/30 pt-2">
-                                    <span className="text-muted-foreground">Priority: <span className={`uppercase ${
-                                      task.priority === "High" ? "text-red-500" :
-                                      task.priority === "Medium" ? "text-amber-500" : "text-slate-500"
-                                    }`}>{task.priority}</span></span>
+                                    <span className="text-muted-foreground">Priority: <span className={`uppercase ${task.priority === "High" ? "text-red-500" :
+                                        task.priority === "Medium" ? "text-amber-500" : "text-slate-500"
+                                      }`}>{task.priority}</span></span>
                                     {task.github_pr_url && (
                                       <a href={task.github_pr_url} target="_blank" rel="noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline">
                                         GitHub PR
@@ -501,9 +496,9 @@ export function FacultyAllocations() {
           <div className="space-y-4 py-4 max-h-[300px] overflow-y-auto pr-1">
             {(() => {
               if (!currentAllocToModify) return null;
-              
+
               // Filter Level A students to ones matching the project domain and NOT currently in team members
-              const eligibleStudents = levelAStudents.filter(student => 
+              const eligibleStudents = levelAStudents.filter(student =>
                 student.skills?.some((s: any) => s.domain_id === currentAllocToModify.domain?.domain_id) &&
                 !currentAllocToModify.allocation.team_members?.some((m: any) => m.student_id === student.profile_id)
               );
@@ -518,13 +513,13 @@ export function FacultyAllocations() {
 
               return eligibleStudents.map(student => (
                 <div key={student.user_id} className="flex items-center space-x-3 p-3 rounded-xl border border-border/40 hover:bg-muted/30 transition-colors">
-                  <Checkbox 
-                    id={`student-add-${student.user_id}`} 
+                  <Checkbox
+                    id={`student-add-${student.user_id}`}
                     checked={selectedStudentsToAdd.includes(student.profile_id)}
                     onCheckedChange={() => handleStudentCheckboxToggle(student.profile_id)}
                   />
-                  <label 
-                    htmlFor={`student-add-${student.user_id}`} 
+                  <label
+                    htmlFor={`student-add-${student.user_id}`}
                     className="flex-1 flex flex-col cursor-pointer text-xs"
                   >
                     <span className="text-sm font-bold text-foreground">{student.first_name} {student.last_name}</span>
@@ -540,8 +535,8 @@ export function FacultyAllocations() {
             <Button variant="ghost" onClick={() => setCurrentAllocToModify(null)} disabled={isSubmittingStudents}>
               Cancel
             </Button>
-            <Button 
-              onClick={handleAddStudentsSubmit} 
+            <Button
+              onClick={handleAddStudentsSubmit}
               disabled={selectedStudentsToAdd.length === 0 || isSubmittingStudents}
               className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold"
             >

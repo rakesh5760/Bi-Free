@@ -1,4 +1,4 @@
-import { Users, Calendar, FileText, Home, Settings, MessageSquare, Award, Clock } from "lucide-react";
+import { Users, Calendar, FileText, Home, Settings, MessageSquare, Award, Clock, Briefcase } from "lucide-react";
 import { Link, useLocation } from "react-router";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent } from "../../../components/ui/card";
@@ -9,6 +9,7 @@ export function MentorSidebar() {
   const menuItems = [
     { icon: Home, label: "Dashboard", path: "/mentor" },
     { icon: Users, label: "My Students", path: "/mentor/students" },
+    { icon: Briefcase, label: "Projects", path: "/mentor/projects" },
     { icon: FileText, label: "Submissions", path: "/mentor/submissions" },
     { icon: Calendar, label: "Schedule", path: "/mentor/schedule" },
     { icon: MessageSquare, label: "Messages", path: "/mentor/messages" },

@@ -224,7 +224,7 @@ export function DashboardLayout({ children, sidebar, title }: DashboardLayoutPro
                   <BreadcrumbList>
                     <BreadcrumbItem>
                       <BreadcrumbLink asChild>
-                        <Link to="/">Home</Link>
+                        <Link to={user?.role ? `/${user.role}` : '/'}>Home</Link>
                       </BreadcrumbLink>
                     </BreadcrumbItem>
                     {paths.map((path, index) => {

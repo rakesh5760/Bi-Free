@@ -3,6 +3,7 @@ import { DashboardLayout } from "../../layouts/DashboardLayout";
 import { MentorSidebar } from "./components/MentorSidebar";
 import { MentorOverview } from "./components/MentorOverview";
 import { MentorStudentsList } from "./components/MentorStudentsList";
+import { MentorProjects } from "./components/MentorProjects";
 import { PlaceholderPage } from "../../components/PlaceholderPage";
 
 export default function MentorDashboard() {
@@ -16,6 +17,10 @@ export default function MentorDashboard() {
         <Route
           path="students"
           element={<MentorStudentsList />}
+        />
+        <Route
+          path="projects"
+          element={<MentorProjects />}
         />
         <Route
           path="submissions"
