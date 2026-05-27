@@ -136,3 +136,20 @@ class FacultyService:
         self.db.delete(team_member)
         self.db.commit()
         return {"success": True, "message": "Student removed from team."}
+
+    def override_student_profile(self, user_id: int, level_id: int, domain_id: int, reason: Optional[str] = None):
+        """
+        Directly updates the student's level and domain.
+        """
+        student = self.db.query(StudentProfile).filter(StudentProfile.user_id == user_id).first()
+        if not student:
+            raise HTTPException(status_code=404, detail="Student profile not found.")
+            
+        student.level_id = level_id
+        student.domain_id = domain_id
+        if reason:
+            student.override_reason = reason
+            
+        self.db.commit()
+        self.db.refresh(student)
+        return student

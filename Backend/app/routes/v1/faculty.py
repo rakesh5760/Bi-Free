@@ -93,3 +93,22 @@ def remove_student(
     svc = FacultyService(db)
     res = svc.remove_student_from_team(allocation_id, student_id)
     return success_response(message=res["message"])
+
+class StudentOverrideRequest(BaseModel):
+    level_id: int
+    domain_id: int
+    reason: Optional[str] = None
+
+@router.put("/students/{user_id}/override", response_model=StandardResponse)
+def override_student_profile(
+    user_id: int,
+    request: StudentOverrideRequest,
+    current_user: User = Depends(faculty_checker),
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Directly update a student's level and domain.
+    """
+    svc = FacultyService(db)
+    svc.override_student_profile(user_id, request.level_id, request.domain_id, request.reason)
+    return success_response(message="Student profile overridden successfully.")

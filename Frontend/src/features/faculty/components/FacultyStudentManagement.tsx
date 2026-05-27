@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import { Avatar, AvatarFallback } from "../../../components/ui/avatar";
-import { api } from "../../../services/api.client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../../components/ui/dialog";
+import { api, facultyApi } from "../../../services/api.client";
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -27,14 +28,28 @@ export function FacultyStudentManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("all");
 
+  const [editingStudent, setEditingStudent] = useState<any>(null);
+  const [levels, setLevels] = useState<any[]>([]);
+  const [domains, setDomains] = useState<any[]>([]);
+  const [overrideLevelId, setOverrideLevelId] = useState<string>("");
+  const [overrideDomainId, setOverrideDomainId] = useState<string>("");
+  const [overrideReason, setOverrideReason] = useState<string>("");
+  const [submitting, setSubmitting] = useState(false);
+
   useEffect(() => {
     let active = true;
     const fetchStudents = async () => {
       try {
         setLoading(true);
-        const response = await api.get("/users/admin/users");
+        const [usersRes, levelsRes, domainsRes] = await Promise.all([
+          api.get("/users/admin/users"),
+          facultyApi.getLevels().catch(() => ({ data: [] })),
+          facultyApi.getDomains().catch(() => ({ data: [] }))
+        ]);
         if (active) {
-          setStudents(response.data.data.students || []);
+          setStudents(usersRes.data.data.students || []);
+          setLevels(levelsRes.data || []);
+          setDomains(domainsRes.data || []);
           setError(null);
         }
       } catch (err: any) {
@@ -53,6 +68,34 @@ export function FacultyStudentManagement() {
       active = false;
     };
   }, []);
+
+  const handleEditClick = (student: any) => {
+    setEditingStudent(student);
+    setOverrideLevelId("");
+    setOverrideDomainId("");
+    setOverrideReason("");
+  };
+
+  const handleSubmitOverride = async () => {
+    if (!editingStudent || !overrideLevelId || !overrideDomainId) return;
+    try {
+      setSubmitting(true);
+      await facultyApi.overrideStudentProfile(editingStudent.user_id, {
+        level_id: parseInt(overrideLevelId),
+        domain_id: parseInt(overrideDomainId),
+        reason: overrideReason
+      });
+      // Refresh students
+      const response = await api.get("/users/admin/users");
+      setStudents(response.data.data.students || []);
+      setEditingStudent(null);
+    } catch (err) {
+      console.error("Failed to override student profile:", err);
+      alert("Failed to override student profile. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   // Filter students based on search and level selection
   const filteredStudents = students.filter((student) => {
@@ -301,15 +344,76 @@ export function FacultyStudentManagement() {
                     )}
                   </div>
 
-                  <Button variant="ghost" size="sm" className="h-8 font-bold text-xs text-indigo-500 hover:text-indigo-600 hover:bg-indigo-500/10 px-2.5">
-                    Audit
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" className="h-8 font-bold text-xs text-indigo-500 hover:text-indigo-600 hover:bg-indigo-500/10 px-2.5" onClick={() => handleEditClick(student)}>
+                      Manage
+                    </Button>
+                    <Button variant="ghost" size="sm" className="h-8 font-bold text-xs text-muted-foreground hover:text-foreground px-2.5">
+                      Audit
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}
           </>
         )}
       </motion.div>
+
+      {/* Student Override Dialog */}
+      <Dialog open={!!editingStudent} onOpenChange={(open) => !open && setEditingStudent(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Update Student Profile</DialogTitle>
+            <DialogDescription>
+              Override {editingStudent?.first_name}'s level and domain allocation.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Domain</label>
+              <select 
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                value={overrideDomainId}
+                onChange={(e) => setOverrideDomainId(e.target.value)}
+              >
+                <option value="">Select Domain...</option>
+                {domains.map((d) => (
+                  <option key={d.domain_id} value={d.domain_id}>{d.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Level</label>
+              <select 
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                value={overrideLevelId}
+                onChange={(e) => setOverrideLevelId(e.target.value)}
+              >
+                <option value="">Select Level...</option>
+                {levels.map((l) => (
+                  <option key={l.level_id} value={l.level_id}>{l.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Reason for Override</label>
+              <textarea
+                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                placeholder="Briefly explain the reason for this level jump/override..."
+                value={overrideReason}
+                onChange={(e) => setOverrideReason(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setEditingStudent(null)} disabled={submitting}>Cancel</Button>
+            <Button onClick={handleSubmitOverride} disabled={submitting || !overrideLevelId || !overrideDomainId}>
+              {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Save Changes
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }

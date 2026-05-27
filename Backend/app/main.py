@@ -4,7 +4,7 @@ from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.config import settings
-from app.routes.v1 import auth, users, students, learning, exams, faculty, mentors, clients, projects, reputation, analytics
+from app.routes.v1 import auth, users, students, learning, exams, faculty, mentors, clients, projects, reputation, analytics, core_routes
 from app.utils.exceptions import validation_exception_handler, http_exception_handler, global_exception_handler
 from app.database.session import Base, engine, safe_migrate
 
@@ -47,6 +47,7 @@ app.include_router(clients.router, prefix=f"{settings.API_V1_STR}/clients", tags
 app.include_router(projects.router, prefix=f"{settings.API_V1_STR}/projects", tags=["projects"])
 app.include_router(reputation.router, prefix=f"{settings.API_V1_STR}/reputation", tags=["reputation"])
 app.include_router(analytics.router, prefix=f"{settings.API_V1_STR}/analytics", tags=["analytics"])
+app.include_router(core_routes.router, prefix=f"{settings.API_V1_STR}/core", tags=["core"])
 
 @app.get("/")
 def root():

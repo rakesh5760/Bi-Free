@@ -59,3 +59,18 @@ export const clientApi = {
     return response.data;
   }
 };
+
+export const facultyApi = {
+  getLevels: async () => {
+    const response = await api.get('/core/levels');
+    return response.data;
+  },
+  getDomains: async () => {
+    const response = await api.get('/core/domains');
+    return response.data;
+  },
+  overrideStudentProfile: async (userId: number, data: { level_id: number; domain_id: number; reason?: string }) => {
+    const response = await api.put(`/faculty/students/${userId}/override`, data);
+    return response.data;
+  }
+};
