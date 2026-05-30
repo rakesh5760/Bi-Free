@@ -44,6 +44,7 @@ def register(
         password_hash=security.get_password_hash(request.password),
         first_name=request.first_name,
         last_name=request.last_name,
+        phone_number=request.phone_number,
         role_id=role.role_id,
         is_active=True
     )

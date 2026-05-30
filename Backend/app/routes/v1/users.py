@@ -166,7 +166,10 @@ def get_admin_users(
             trust_score = float(sp.trust_score) if sp else 0.0
             detail["details"] = {
                 "level": level_name.replace("Level ", "") if level_name.startswith("Level ") else level_name,
+                "level_id": sp.level_id if sp else None,
                 "domain": sp.domain.name if sp and hasattr(sp, "domain") and sp.domain else "Unassigned",
+                "domain_id": sp.domain_id if sp else None,
+                "level_overridden": sp.level_overridden if sp and hasattr(sp, "level_overridden") else False,
                 "override_reason": sp.override_reason if sp and hasattr(sp, "override_reason") else None,
                 "trust_score": trust_score,
                 "github_handle": sp.github_handle if sp else None,

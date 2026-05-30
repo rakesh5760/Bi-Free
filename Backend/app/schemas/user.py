@@ -23,6 +23,7 @@ class RegisterRequest(BaseModel):
     first_name: str
     last_name: str
     role: str
+    phone_number: Optional[str] = None
     domain: Optional[str] = None
     company_name: Optional[str] = None
 

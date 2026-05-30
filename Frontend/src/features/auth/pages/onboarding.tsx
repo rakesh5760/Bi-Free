@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import { Code, Database, Layout, Laptop, ArrowRight, ArrowLeft, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
@@ -14,13 +14,29 @@ export default function OnboardingPage() {
   const { login } = useAuthStore();
   
   // State from signup
-  const { role = 'student', email = '', name = '', password = '' } = location.state || {};
+  const { role = 'student', email = '', name = '', password = '', phoneNumber = '' } = location.state || {};
 
   const [step, setStep] = useState(1);
   const [domain, setDomain] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [domainsList, setDomainsList] = useState<any[]>([]);
+
+  // Fetch domains dynamically
+  useEffect(() => {
+    const fetchDomains = async () => {
+      try {
+        const response = await api.get('/core/domains');
+        if (response.data?.data) {
+          setDomainsList(response.data.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch domains', err);
+      }
+    };
+    fetchDomains();
+  }, []);
 
   // If someone lands here directly without going through signup, redirect them.
   if (!email) {
@@ -51,6 +67,7 @@ export default function OnboardingPage() {
         password: password,
         first_name: firstName,
         last_name: lastName,
+        phone_number: phoneNumber,
         role: role,
         domain: domain || undefined,
         company_name: companyName || undefined
@@ -162,22 +179,24 @@ export default function OnboardingPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {[
-                    { id: 'frontend', title: 'Frontend Engineering', icon: Layout, desc: 'React, Vue, Tailwind' },
-                    { id: 'backend', title: 'Backend Engineering', icon: Database, desc: 'Node.js, Python, SQL' },
-                    { id: 'fullstack', title: 'Full Stack', icon: Laptop, desc: 'End-to-end development' },
-                    { id: 'mobile', title: 'Mobile App Dev', icon: Code, desc: 'React Native, Flutter' },
-                  ].map((item) => (
-                    <div 
-                      key={item.id}
-                      onClick={() => setDomain(item.id)}
-                      className={`p-4 border rounded-xl cursor-pointer transition-all hover:shadow-md ${domain === item.id ? 'border-primary bg-primary/5 ring-1 ring-primary/30' : 'hover:border-primary/50'}`}
-                    >
-                      <item.icon className={`h-8 w-8 mb-3 ${domain === item.id ? 'text-primary' : 'text-muted-foreground'}`} />
-                      <h3 className="font-semibold">{item.title}</h3>
-                      <p className="text-sm text-muted-foreground">{item.desc}</p>
+                  {domainsList.length > 0 ? (
+                    domainsList.map((item) => (
+                      <div 
+                        key={item.domain_id}
+                        onClick={() => setDomain(item.name)}
+                        className={`p-4 border rounded-xl cursor-pointer transition-all hover:shadow-md ${domain === item.name ? 'border-primary bg-primary/5 ring-1 ring-primary/30' : 'hover:border-primary/50'}`}
+                      >
+                        <Code className={`h-8 w-8 mb-3 ${domain === item.name ? 'text-primary' : 'text-muted-foreground'}`} />
+                        <h3 className="font-semibold">{item.name}</h3>
+                        <p className="text-sm text-muted-foreground line-clamp-2">{item.description || 'Master this domain'}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="col-span-2 text-center p-8 text-muted-foreground">
+                      <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
+                      Loading domains...
                     </div>
-                  ))}
+                  )}
                 </CardContent>
                 <CardFooter className="flex justify-between pt-4">
                   <Button variant="ghost" onClick={prevStep}>

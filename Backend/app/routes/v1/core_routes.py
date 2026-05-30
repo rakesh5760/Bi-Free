@@ -22,7 +22,6 @@ def get_levels(
 
 @router.get("/domains", response_model=StandardResponse[List[DomainSchema]])
 def get_domains(
-    current_user: Any = Depends(get_current_user),
     db: Session = Depends(get_db)
 ) -> Any:
     """Get all available domains."""

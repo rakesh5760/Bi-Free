@@ -22,17 +22,27 @@ export default function SignupPage() {
   const [role, setRole] = useState<'student' | 'client'>('student');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
     setIsLoading(true);
     
     // Simulate API delay
     setTimeout(() => {
       setIsLoading(false);
-      navigate('/onboarding', { state: { role, email, name, password } });
+      navigate('/onboarding', { state: { role, email, name, password, phoneNumber } });
     }, 500);
   };
 
@@ -63,6 +73,11 @@ export default function SignupPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {error && (
+              <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive font-medium text-center">
+                {error}
+              </div>
+            )}
             <form onSubmit={handleSignup} className="space-y-6">
               
               <div className="space-y-3">
@@ -109,6 +124,17 @@ export default function SignupPage() {
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="phoneNumber">Mobile Number</Label>
+                  <Input
+                    id="phoneNumber"
+                    type="tel"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    placeholder="+1 (555) 000-0000"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
                   <Input
                     id="password"
@@ -116,6 +142,17 @@ export default function SignupPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Create a strong password"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Re-enter your password"
                     required
                   />
                 </div>

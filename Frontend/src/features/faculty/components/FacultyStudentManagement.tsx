@@ -71,20 +71,24 @@ export function FacultyStudentManagement() {
 
   const handleEditClick = (student: any) => {
     setEditingStudent(student);
-    setOverrideLevelId("");
-    setOverrideDomainId("");
+    // Pre-populate with the student's current level and domain
+    setOverrideLevelId(student.details.level_id ? String(student.details.level_id) : "");
+    setOverrideDomainId(student.details.domain_id ? String(student.details.domain_id) : "");
     setOverrideReason("");
   };
 
   const handleSubmitOverride = async () => {
-    if (!editingStudent || !overrideLevelId || !overrideDomainId) return;
+    if (!editingStudent || !overrideLevelId) return;
     try {
       setSubmitting(true);
-      await facultyApi.overrideStudentProfile(editingStudent.user_id, {
+      const payload: any = {
         level_id: parseInt(overrideLevelId),
-        domain_id: parseInt(overrideDomainId),
         reason: overrideReason
-      });
+      };
+      if (overrideDomainId) {
+        payload.domain_id = parseInt(overrideDomainId);
+      }
+      await facultyApi.overrideStudentProfile(editingStudent.user_id, payload);
       // Refresh students
       const response = await api.get("/users/admin/users");
       setStudents(response.data.data.students || []);
@@ -261,8 +265,8 @@ export function FacultyStudentManagement() {
                   </div>
                 </div>
 
-                {/* Level Badge */}
-                <div className="col-span-1 md:col-span-2 flex md:justify-center items-center">
+                {/* Level Badge & Domain */}
+                <div className="col-span-1 md:col-span-2 flex flex-col md:items-center gap-1">
                   <Badge className={`px-2.5 py-0.5 text-[10px] uppercase tracking-wider font-extrabold shadow-sm ${
                     student.details.level === "A" ? "bg-emerald-500 text-white" :
                     student.details.level === "B" ? "bg-indigo-500 text-white" :
@@ -271,6 +275,9 @@ export function FacultyStudentManagement() {
                   }`}>
                     Level {student.details.level}
                   </Badge>
+                  <span className="text-[10px] font-medium text-muted-foreground truncate max-w-[120px]" title={student.details.domain}>
+                    {student.details.domain}
+                  </span>
                 </div>
 
                 {/* Trust Score & Progress Bar */}
@@ -361,27 +368,51 @@ export function FacultyStudentManagement() {
 
       {/* Student Override Dialog */}
       <Dialog open={!!editingStudent} onOpenChange={(open) => !open && setEditingStudent(null)}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[480px]">
           <DialogHeader>
             <DialogTitle>Update Student Profile</DialogTitle>
             <DialogDescription>
-              Override {editingStudent?.first_name}'s level and domain allocation.
+              Override {editingStudent?.first_name} {editingStudent?.last_name}'s level and domain allocation.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <label className="text-sm font-medium">Domain</label>
-              <select 
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                value={overrideDomainId}
-                onChange={(e) => setOverrideDomainId(e.target.value)}
-              >
-                <option value="">Select Domain...</option>
-                {domains.map((d) => (
-                  <option key={d.domain_id} value={d.domain_id}>{d.name}</option>
-                ))}
-              </select>
+
+          {/* Current Student Context */}
+          {editingStudent && (
+            <div className="bg-muted/30 border border-border/50 rounded-lg p-3 space-y-2">
+              <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Current Profile</div>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-medium text-muted-foreground">Level:</span>
+                  <Badge className={`px-2 py-0.5 text-[10px] uppercase tracking-wider font-extrabold shadow-sm ${
+                    editingStudent.details.level === "A" ? "bg-emerald-500 text-white" :
+                    editingStudent.details.level === "B" ? "bg-indigo-500 text-white" :
+                    editingStudent.details.level === "C" ? "bg-cyan-500 text-white" :
+                    "bg-purple-500 text-white"
+                  }`}>
+                    Level {editingStudent.details.level}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-medium text-muted-foreground">Domain:</span>
+                  <span className="text-xs font-semibold text-foreground">{editingStudent.details.domain}</span>
+                </div>
+              </div>
+              {editingStudent.details.level_overridden && (
+                <div className="flex items-center gap-1.5 mt-1">
+                  <Badge variant="outline" className="text-[9px] uppercase tracking-wider border-amber-500/30 text-amber-600 bg-amber-500/10 px-1.5 py-0 font-extrabold">
+                    Faculty Override Active
+                  </Badge>
+                  {editingStudent.details.override_reason && (
+                    <span className="text-[11px] text-muted-foreground italic truncate max-w-[250px]" title={editingStudent.details.override_reason}>
+                      — "{editingStudent.details.override_reason}"
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
+          )}
+
+          <div className="grid gap-4 py-2">
             <div className="grid gap-2">
               <label className="text-sm font-medium">Level</label>
               <select 
@@ -392,6 +423,19 @@ export function FacultyStudentManagement() {
                 <option value="">Select Level...</option>
                 {levels.map((l) => (
                   <option key={l.level_id} value={l.level_id}>{l.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Domain <span className="text-muted-foreground font-normal">(optional)</span></label>
+              <select 
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                value={overrideDomainId}
+                onChange={(e) => setOverrideDomainId(e.target.value)}
+              >
+                <option value="">Keep current domain</option>
+                {domains.map((d) => (
+                  <option key={d.domain_id} value={d.domain_id}>{d.name}</option>
                 ))}
               </select>
             </div>
@@ -407,7 +451,7 @@ export function FacultyStudentManagement() {
           </div>
           <div className="flex justify-end gap-3">
             <Button variant="outline" onClick={() => setEditingStudent(null)} disabled={submitting}>Cancel</Button>
-            <Button onClick={handleSubmitOverride} disabled={submitting || !overrideLevelId || !overrideDomainId}>
+            <Button onClick={handleSubmitOverride} disabled={submitting || !overrideLevelId}>
               {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Save Changes
             </Button>

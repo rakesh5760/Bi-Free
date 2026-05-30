@@ -137,16 +137,19 @@ class FacultyService:
         self.db.commit()
         return {"success": True, "message": "Student removed from team."}
 
-    def override_student_profile(self, user_id: int, level_id: int, domain_id: int, reason: Optional[str] = None):
+    def override_student_profile(self, user_id: int, level_id: int, domain_id: Optional[int] = None, reason: Optional[str] = None):
         """
-        Directly updates the student's level and domain.
+        Directly updates the student's level and optionally domain.
+        Sets the level_overridden flag so automatic progression respects this override.
         """
         student = self.db.query(StudentProfile).filter(StudentProfile.user_id == user_id).first()
         if not student:
             raise HTTPException(status_code=404, detail="Student profile not found.")
             
         student.level_id = level_id
-        student.domain_id = domain_id
+        student.level_overridden = True
+        if domain_id is not None:
+            student.domain_id = domain_id
         if reason:
             student.override_reason = reason
             

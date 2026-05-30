@@ -41,24 +41,38 @@ class StudentService:
         profile = self.get_profile(user_id)
         current_score = float(profile.trust_score)
         
-        # In a real scenario, this would query the `levels` table.
-        # We will use the hardcoded baseline for this MVP phase.
+        # Determine the level the student qualifies for based on trust score
         eligible_level_name = "Level D"
         for level_name, reqs in LEVEL_THRESHOLDS.items():
             if current_score >= reqs["min_trust"]:
                 eligible_level_name = level_name
                 
-        # Find the level in DB
+        # Find the eligible level in DB
         db_level = self.db.query(Level).filter(Level.name == eligible_level_name).first()
         
         if not db_level:
-            # If the levels aren't seeded in DB yet, we just return the result
             return {
                 "current_score": current_score,
                 "eligible_level": eligible_level_name,
                 "promoted": False,
                 "message": "Levels not fully seeded in database."
             }
+
+        # If faculty has overridden this student's level, only allow PROMOTION (never demote)
+        if profile.level_overridden and profile.level_id is not None:
+            current_level = self.db.query(Level).filter(Level.level_id == profile.level_id).first()
+            if current_level:
+                current_threshold = LEVEL_THRESHOLDS.get(current_level.name, {}).get("min_trust", 0.0)
+                eligible_threshold = LEVEL_THRESHOLDS.get(eligible_level_name, {}).get("min_trust", 0.0)
+                
+                if eligible_threshold <= current_threshold:
+                    # Would be a demotion — keep faculty-assigned level
+                    return {
+                        "current_score": current_score,
+                        "eligible_level": current_level.name,
+                        "promoted": False,
+                        "message": f"Level maintained at {current_level.name} (faculty override protected)."
+                    }
 
         promoted = False
         if profile.level_id != db_level.level_id:

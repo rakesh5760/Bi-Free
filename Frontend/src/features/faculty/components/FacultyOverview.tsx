@@ -284,10 +284,12 @@ export function FacultyOverview() {
                   <div className="p-6 text-center text-muted-foreground font-medium">No pending allocations.</div>
                 ) : pendingProjects.map((project) => {
                   
-                  // Filter students whose skills match the project's domain
-                  const eligibleStudents = levelAStudents.filter(student => 
-                    student.skills?.some((s: any) => s.domain_id === project.domain?.domain_id)
-                  );
+                  // Filter students whose skills match the project's domain, or show all if no domain specified
+                  const eligibleStudents = project.domain
+                    ? levelAStudents.filter(student => 
+                        student.skills?.some((s: any) => s.domain_id === project.domain.domain_id)
+                      )
+                    : levelAStudents;
 
                   return (
                   <div key={project.project_id} className="p-6 hover:bg-muted/30 transition-colors">
@@ -365,7 +367,9 @@ export function FacultyOverview() {
                             <DialogHeader>
                               <DialogTitle>Select Level A Students</DialogTitle>
                               <DialogDescription>
-                                These students have verified skills in {project.domain?.name}.
+                                {project.domain 
+                                  ? `These students have verified skills in ${project.domain.name}.`
+                                  : "This is a general project. All Level A students are eligible."}
                               </DialogDescription>
                             </DialogHeader>
                             <div className="space-y-4 py-4 max-h-[300px] overflow-y-auto">

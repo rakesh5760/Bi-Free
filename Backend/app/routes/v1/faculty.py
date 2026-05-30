@@ -96,7 +96,7 @@ def remove_student(
 
 class StudentOverrideRequest(BaseModel):
     level_id: int
-    domain_id: int
+    domain_id: Optional[int] = None
     reason: Optional[str] = None
 
 @router.put("/students/{user_id}/override", response_model=StandardResponse)

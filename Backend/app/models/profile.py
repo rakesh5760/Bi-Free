@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Numeric, ForeignKey, Table
+from sqlalchemy import Column, Integer, String, Boolean, Numeric, ForeignKey, Table
 from sqlalchemy.orm import relationship
 from app.database.session import Base
 from app.database.mixins import TimestampMixin, SoftDeleteMixin
@@ -21,6 +21,7 @@ class StudentProfile(Base, TimestampMixin, SoftDeleteMixin):
     github_handle = Column(String(100))
     portfolio_url = Column(String(255))
     override_reason = Column(String(500), nullable=True)
+    level_overridden = Column(Boolean, default=False, nullable=False)
 
     user = relationship("User", back_populates="student_profile")
     level = relationship("Level")

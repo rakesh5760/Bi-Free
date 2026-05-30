@@ -26,6 +26,7 @@ def safe_migrate():
     # List of (table, column, column_definition) tuples to ensure exist
     columns_to_add = [
         ("users", "phone_number", "VARCHAR(20) NULL"),
+        ("student_profiles", "level_overridden", "TINYINT(1) NOT NULL DEFAULT 0"),
     ]
     
     # List of CREATE TABLE ... statements (safe to run; checks table existence first)
