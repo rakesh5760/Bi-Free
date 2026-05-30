@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Checkbox } from "../../../components/ui/checkbox";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
-import { api } from "../../../services/api.client";
+import { api, facultyApi } from "../../../services/api.client";
 import { toast } from "sonner";
 
 const staggerContainer = {
@@ -42,23 +42,35 @@ export function FacultyOverview() {
 
   // Invite Mentor states
   const [isInviteOpen, setIsInviteOpen] = useState(false);
-  const [inviteForm, setInviteForm] = useState({ first_name: '', last_name: '', email: '', password: '', domain: '' });
+  const [inviteForm, setInviteForm] = useState({ first_name: '', last_name: '', email: '', password: 'password123', domain: '', phone_number: '' });
+
+  // Invite Student states
+  const [isInviteStudentOpen, setIsInviteStudentOpen] = useState(false);
+  const [inviteStudentForm, setInviteStudentForm] = useState({ first_name: '', last_name: '', email: '', password: 'password123', domain: '', level: '', phone_number: '' });
+
+  // Lookups
+  const [levels, setLevels] = useState<any[]>([]);
+  const [domains, setDomains] = useState<any[]>([]);
 
   useEffect(() => {
     async function fetchData() {
       try {
         setIsLoading(true);
-        const [analyticsRes, projectsRes, usersRes, studentsRes] = await Promise.all([
+        const [analyticsRes, projectsRes, usersRes, studentsRes, levelsRes, domainsRes] = await Promise.all([
           api.get('/analytics/institutional'),
           api.get('/mentors/projects/global'),
           api.get('/users/admin/users'),
-          api.get('/faculty/students/level-a')
+          api.get('/faculty/students/level-a'),
+          facultyApi.getLevels().catch(() => ({ data: [] })),
+          facultyApi.getDomains().catch(() => ({ data: [] }))
         ]);
 
         if (analyticsRes.data.success) setAnalytics(analyticsRes.data.data);
         if (projectsRes.data.success) setProjects(projectsRes.data.data.items || []);
         if (usersRes.data.success) setMentors(usersRes.data.data.mentors || []);
         if (studentsRes.data.success) setLevelAStudents(studentsRes.data.data.items || []);
+        setLevels(levelsRes.data || []);
+        setDomains(domainsRes.data || []);
 
       } catch (err) {
         console.error("Failed to fetch faculty overview data", err);
@@ -129,15 +141,36 @@ export function FacultyOverview() {
       };
       const res = await api.post('/auth/register', payload);
       if (res.data.access_token) {
-        toast.success("Mentor invited successfully!");
+        toast.success("Mentor added successfully!");
         setIsInviteOpen(false);
-        setInviteForm({ first_name: '', last_name: '', email: '', password: '', domain: '' });
+        setInviteForm({ first_name: '', last_name: '', email: '', password: 'password123', domain: '', phone_number: '' });
         // Refresh mentors
         const usersRes = await api.get('/users/admin/users');
         if (usersRes.data.success) setMentors(usersRes.data.data.mentors || []);
       }
     } catch (err: any) {
-      toast.error(err.response?.data?.detail || "Failed to invite mentor");
+      toast.error(err.response?.data?.detail || "Failed to add mentor");
+    }
+  };
+
+  const handleInviteStudent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const payload = {
+        ...inviteStudentForm,
+        role: "Student"
+      };
+      const res = await api.post('/auth/register', payload);
+      if (res.data.access_token) {
+        toast.success("Student added successfully!");
+        setIsInviteStudentOpen(false);
+        setInviteStudentForm({ first_name: '', last_name: '', email: '', password: 'password123', domain: '', level: '', phone_number: '' });
+        // Refresh students
+        const studentsRes = await api.get('/faculty/students/level-a');
+        if (studentsRes.data.success) setLevelAStudents(studentsRes.data.data.items || []);
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || "Failed to add student");
     }
   };
 
@@ -561,8 +594,12 @@ export function FacultyOverview() {
                       <Input required type="email" value={inviteForm.email} onChange={e => setInviteForm({...inviteForm, email: e.target.value})} placeholder="mentor@skillforge.edu" />
                     </div>
                     <div className="space-y-2">
-                      <Label>Temporary Password</Label>
-                      <Input required type="password" value={inviteForm.password} onChange={e => setInviteForm({...inviteForm, password: e.target.value})} placeholder="••••••••" />
+                      <Label>Contact Number</Label>
+                      <Input value={inviteForm.phone_number} onChange={e => setInviteForm({...inviteForm, phone_number: e.target.value})} placeholder="+1 (555) 000-0000" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Default Password</Label>
+                      <Input required type="text" readOnly value={inviteForm.password} className="bg-muted text-muted-foreground" />
                     </div>
                     <div className="space-y-2">
                       <Label>Domain Specialization</Label>
@@ -571,15 +608,84 @@ export function FacultyOverview() {
                           <SelectValue placeholder="Select a domain" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Web Development">Web Development</SelectItem>
-                          <SelectItem value="Artificial Intelligence">Artificial Intelligence</SelectItem>
-                          <SelectItem value="Cyber Security">Cyber Security</SelectItem>
-                          <SelectItem value="Data Science">Data Science</SelectItem>
+                          {domains.map((d) => (
+                            <SelectItem key={d.domain_id} value={d.name}>{d.name}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
                     <DialogFooter className="mt-6">
                       <Button type="button" variant="ghost" onClick={() => setIsInviteOpen(false)}>Cancel</Button>
+                      <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white">Send Invite</Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+
+              <Dialog open={isInviteStudentOpen} onOpenChange={setIsInviteStudentOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start h-12 font-semibold">
+                    <UserPlus className="mr-3 h-4 w-4 text-muted-foreground" /> Invite New Student
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[500px]">
+                  <DialogHeader>
+                    <DialogTitle>Invite New Student</DialogTitle>
+                    <DialogDescription>
+                      Create a new student account and assign their initial level and domain.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleInviteStudent} className="space-y-4 mt-2">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>First Name</Label>
+                        <Input required value={inviteStudentForm.first_name} onChange={e => setInviteStudentForm({...inviteStudentForm, first_name: e.target.value})} placeholder="Jane" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Last Name</Label>
+                        <Input required value={inviteStudentForm.last_name} onChange={e => setInviteStudentForm({...inviteStudentForm, last_name: e.target.value})} placeholder="Smith" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Email</Label>
+                        <Input required type="email" value={inviteStudentForm.email} onChange={e => setInviteStudentForm({...inviteStudentForm, email: e.target.value})} placeholder="student@skillforge.edu" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Contact Number</Label>
+                        <Input value={inviteStudentForm.phone_number} onChange={e => setInviteStudentForm({...inviteStudentForm, phone_number: e.target.value})} placeholder="+1 (555) 000-0000" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Domain</Label>
+                        <Select required value={inviteStudentForm.domain} onValueChange={val => setInviteStudentForm({...inviteStudentForm, domain: val})}>
+                          <SelectTrigger><SelectValue placeholder="Select Domain" /></SelectTrigger>
+                          <SelectContent>
+                            {domains.map((d) => (
+                              <SelectItem key={d.domain_id} value={d.name}>{d.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Level</Label>
+                        <Select required value={inviteStudentForm.level} onValueChange={val => setInviteStudentForm({...inviteStudentForm, level: val})}>
+                          <SelectTrigger><SelectValue placeholder="Select Level" /></SelectTrigger>
+                          <SelectContent>
+                            {levels.map((l) => (
+                              <SelectItem key={l.level_id} value={l.name}>{l.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Default Password</Label>
+                      <Input required type="text" readOnly value={inviteStudentForm.password} className="bg-muted text-muted-foreground" />
+                    </div>
+                    <DialogFooter className="mt-6">
+                      <Button type="button" variant="ghost" onClick={() => setIsInviteStudentOpen(false)}>Cancel</Button>
                       <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white">Send Invite</Button>
                     </DialogFooter>
                   </form>

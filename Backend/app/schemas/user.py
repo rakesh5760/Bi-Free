@@ -26,6 +26,7 @@ class RegisterRequest(BaseModel):
     phone_number: Optional[str] = None
     domain: Optional[str] = None
     company_name: Optional[str] = None
+    level: Optional[str] = None
 
 class UserCreate(UserBase):
     email: EmailStr

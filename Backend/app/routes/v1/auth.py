@@ -53,10 +53,26 @@ def register(
     db.refresh(new_user)
     
     if request.role.lower() == 'student':
-        level_d = db.query(Level).filter(Level.name == "Level D").first()
+        domain = db.query(Domain).filter(Domain.name.ilike(f"%{request.domain}%")).first() if request.domain else None
+        
+        target_level_id = None
+        overridden = False
+        
+        if request.level:
+            target_level = db.query(Level).filter(Level.name.ilike(f"%{request.level}%")).first()
+            if target_level:
+                target_level_id = target_level.level_id
+                overridden = True
+                
+        if not target_level_id:
+            level_d = db.query(Level).filter(Level.name == "Level D").first()
+            target_level_id = level_d.level_id if level_d else None
+            
         profile = StudentProfile(
             user_id=new_user.user_id,
-            level_id=level_d.level_id if level_d else None,
+            level_id=target_level_id,
+            domain_id=domain.domain_id if domain else None,
+            level_overridden=overridden,
             trust_score=0.0
         )
         db.add(profile)
