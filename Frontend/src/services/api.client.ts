@@ -27,8 +27,11 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       // Handle unauthorized errors (e.g., redirect to login or attempt refresh)
-      useAuthStore.getState().logout();
-      window.location.href = '/login';
+      // Do not hard-reload if already on the login page to avoid wiping out user inputs
+      if (window.location.pathname !== '/login') {
+        useAuthStore.getState().logout();
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
