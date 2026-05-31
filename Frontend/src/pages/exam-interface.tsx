@@ -11,11 +11,17 @@ import { Progress } from "../components/ui/progress";
 import { usePageVisibility } from "../hooks/usePageVisibility";
 import { useFullscreen } from "../hooks/useFullscreen";
 import { useMediaDevices } from "../hooks/useMediaDevices";
+import { api } from "../services/api.client";
+import { toast } from "sonner";
+import { useNavigate } from "react-router";
 
 export default function ExamInterface() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState(3600);
   const [examStarted, setExamStarted] = useState(false);
+  const [attemptId, setAttemptId] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
   
   // State Management
   const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -88,7 +94,36 @@ export default function ExamInterface() {
     await requestAccess();
     if (!mediaError) {
       await enterFullscreen();
-      setExamStarted(true);
+      try {
+        // Use a default exam ID (e.g., 1) or parse from URL if available
+        const res = await api.post('/exams/1/start');
+        if (res.data.success) {
+          setAttemptId(res.data.data.attempt_id);
+          setExamStarted(true);
+        }
+      } catch (err) {
+        toast.error("Failed to start exam. Make sure you are a student and have an active domain.");
+        console.error("Failed to start exam attempt", err);
+      }
+    }
+  };
+
+  const handleSubmitExam = async () => {
+    if (!attemptId) return;
+    setIsSubmitting(true);
+    try {
+      const formattedSubmissions = Object.entries(answers).map(([qIdx, answer]) => ({
+        question_id: questions[Number(qIdx)].id,
+        answer: { choice: answer }
+      }));
+      await api.post(`/exams/attempts/${attemptId}/submit`, formattedSubmissions);
+      toast.success("Exam submitted successfully!");
+      // Briefly wait to let toast display before navigation
+      setTimeout(() => navigate('/student/dashboard'), 1500);
+    } catch (err) {
+      toast.error("Failed to submit exam");
+      console.error(err);
+      setIsSubmitting(false);
     }
   };
 
@@ -414,9 +449,14 @@ export default function ExamInterface() {
                   <ChevronRight className="ml-2 h-4 w-4" />
                 </Button>
               ) : (
-                <Button className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold shadow-lg shadow-emerald-500/20" size="lg">
-                  Submit Exam
-                  <Send className="ml-2 h-4 w-4" />
+                <Button 
+                  onClick={handleSubmitExam} 
+                  disabled={isSubmitting}
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold shadow-lg shadow-emerald-500/20" 
+                  size="lg"
+                >
+                  {isSubmitting ? "Submitting..." : "Submit Exam"}
+                  {!isSubmitting && <Send className="ml-2 h-4 w-4" />}
                 </Button>
               )}
             </div>

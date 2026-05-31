@@ -360,11 +360,12 @@ function ModuleViewer({
   domain: Domain;
   isCompleted: boolean;
   isSaving: boolean;
-  onFinish: () => void;
+  onFinish: (submissionUrl: string) => void;
   onBack: () => void;
 }) {
   const totalItems = module.lectures.length + module.assignments.length;
   const totalXP = module.assignments.reduce((acc, a) => acc + a.points, 0);
+  const [submissionUrl, setSubmissionUrl] = useState("");
 
   return (
     <motion.div
@@ -500,30 +501,37 @@ function ModuleViewer({
                   </p>
                 </>
               ) : (
-                <>
-                  <h4 className="font-bold text-foreground text-lg mb-1">Ready to finish this module?</h4>
+                <div className="flex flex-col gap-3">
+                  <h4 className="font-bold text-foreground text-lg mb-1">Ready to submit your assessment?</h4>
                   <p className="text-sm text-muted-foreground">
-                    Once you've reviewed all {totalItems} items above, mark this module as complete.
+                    Please provide a link to your assignment solution (e.g., GitHub, CodeSandbox).
                   </p>
-                </>
+                  <input
+                    type="url"
+                    placeholder="https://github.com/your-username/repo"
+                    value={submissionUrl}
+                    onChange={(e) => setSubmissionUrl(e.target.value)}
+                    className="w-full max-w-sm px-4 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                </div>
               )}
             </div>
             <Button
               size="lg"
-              disabled={isCompleted || isSaving}
-              onClick={onFinish}
+              disabled={isCompleted || isSaving || (!isCompleted && !submissionUrl.trim())}
+              onClick={() => onFinish(submissionUrl)}
               className={`min-w-[200px] font-bold text-base h-12 shrink-0 ${
                 isCompleted
                   ? "bg-emerald-500/20 text-emerald-500 border border-emerald-500/30 cursor-default hover:bg-emerald-500/20"
-                  : `bg-gradient-to-r ${domain.color} text-white border-0 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all`
+                  : `bg-gradient-to-r ${domain.color} text-white border-0 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed`
               }`}
             >
               {isCompleted ? (
-                <><CheckCheck className="h-5 w-5 mr-2" /> Completed</>
+                <><CheckCheck className="h-5 w-5 mr-2" /> Submitted</>
               ) : isSaving ? (
-                <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> Saving...</>
+                <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> Submitting...</>
               ) : (
-                <><CheckCircle className="h-5 w-5 mr-2" /> Finish Module</>
+                <><CheckCircle className="h-5 w-5 mr-2" /> Submit Assessment</>
               )}
             </Button>
           </CardContent>
@@ -675,19 +683,35 @@ export default function LearningPortal() {
         DOMAINS.reduce((acc, d) => acc + getDomainProgress(d, completedModules), 0) / DOMAINS.length
       );
 
-  const handleFinishModule = async () => {
+  const handleFinishModule = async (submissionUrl: string) => {
     if (!activeModuleId || completedModules.includes(activeModuleId)) return;
     setIsSaving(true);
+    
+    // Map module key to assignment ID
+    const MODULE_ASSIGNMENT_MAP: Record<string, number> = {
+      "fs-mod-1": 1,
+      "fs-mod-2": 2,
+      "fs-mod-3": 3,
+      "fe-mod-1": 4,
+      "fe-mod-2": 5,
+      "be-mod-1": 6,
+      "be-mod-2": 7
+    };
+    
+    const assignmentId = MODULE_ASSIGNMENT_MAP[activeModuleId];
+
     try {
-      const { data } = await api.post(`/learning/my-modules/${activeModuleId}/complete`);
-      // Backend returns the full updated list
-      setCompletedModules(data.data ?? [...completedModules, activeModuleId]);
-      toast.success('Module completed! 🎉 Progress saved.');
-    } catch (err) {
-      // Optimistic update so the UI doesn't look broken
+      if (assignmentId) {
+        await api.post(`/learning/assignments/${assignmentId}/submit`, { submission_url: submissionUrl });
+        toast.success('Assessment submitted for review! 🎉');
+      } else {
+        await api.post(`/learning/my-modules/${activeModuleId}/complete`);
+        toast.success('Module completed! 🎉 Progress saved.');
+      }
       setCompletedModules(prev => [...prev, activeModuleId]);
-      toast.error('Progress saved locally — will sync when back online.');
-      console.error('Failed to save module completion:', err);
+    } catch (err) {
+      toast.error('Failed to submit assessment.');
+      console.error('Failed to submit:', err);
     } finally {
       setIsSaving(false);
     }

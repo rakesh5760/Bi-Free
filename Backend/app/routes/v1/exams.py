@@ -13,6 +13,28 @@ from app.schemas.exam import Exam, ExamAttempt, MonitoringLog, MonitoringLogCrea
 
 router = APIRouter()
 student_checker = RoleChecker(["Student"])
+mentor_checker = RoleChecker(["Mentor", "Faculty", "Admin"])
+
+from typing import Optional, Dict
+
+class ExamReview(BaseModel):
+    student_id: int
+    approve: bool
+    feedback: str
+    score: int
+    question_scores: Optional[Dict[int, int]] = None
+
+@router.get("/pending-reviews", response_model=StandardResponse[List[ExamAttempt]])
+def get_pending_reviews(
+    current_user: User = Depends(mentor_checker),
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Get exams pending review for the current mentor or faculty.
+    """
+    svc = ExamService(db)
+    reviews = svc.get_pending_exams_for_user(current_user.user_id)
+    return success_response(data=reviews, message=f"Found {len(reviews)} pending exams.")
 
 @router.get("/{exam_id}", response_model=StandardResponse[Exam])
 def get_exam_details(
@@ -66,3 +88,25 @@ def submit_exam(
     svc = ExamService(db)
     attempt = svc.submit_exam(current_user.user_id, attempt_id, request)
     return success_response(data=attempt, message="Exam submitted successfully.")
+
+
+@router.post("/attempts/{attempt_id}/review", response_model=StandardResponse[ExamAttempt])
+def review_exam(
+    attempt_id: int,
+    request: ExamReview,
+    current_user: User = Depends(mentor_checker),
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Mentor reviews an exam submission.
+    """
+    svc = ExamService(db)
+    attempt = svc.review_exam(
+        attempt_id=attempt_id,
+        student_id=request.student_id,
+        approve=request.approve,
+        feedback=request.feedback,
+        score=request.score,
+        question_scores=request.question_scores
+    )
+    return success_response(data=attempt, message="Exam reviewed successfully.")

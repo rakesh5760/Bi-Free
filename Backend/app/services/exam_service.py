@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from datetime import datetime, timedelta
@@ -16,7 +16,13 @@ class ExamService:
             raise HTTPException(status_code=404, detail="Exam not found")
         return exam
 
-    def start_attempt(self, student_id: int, exam_id: int) -> ExamAttempt:
+    def start_attempt(self, user_id: int, exam_id: int) -> ExamAttempt:
+        from app.models.profile import StudentProfile
+        student = self.db.query(StudentProfile).filter(StudentProfile.user_id == user_id).first()
+        if not student:
+            raise HTTPException(status_code=400, detail="Student profile not found.")
+            
+        student_id = student.profile_id
         exam = self.get_exam(exam_id)
         
         # Check if already in progress
@@ -41,7 +47,14 @@ class ExamService:
         self.db.refresh(attempt)
         return attempt
 
-    def ingest_monitoring_log(self, student_id: int, attempt_id: int, log_data: MonitoringLogCreate) -> MonitoringLog:
+    def ingest_monitoring_log(self, user_id: int, attempt_id: int, log_data: MonitoringLogCreate) -> MonitoringLog:
+        from app.models.profile import StudentProfile
+        student = self.db.query(StudentProfile).filter(StudentProfile.user_id == user_id).first()
+        if not student:
+            raise HTTPException(status_code=400, detail="Student profile not found.")
+            
+        student_id = student.profile_id
+
         attempt = self.db.query(ExamAttempt).filter(
             ExamAttempt.attempt_id == attempt_id,
             ExamAttempt.student_id == student_id,
@@ -67,7 +80,14 @@ class ExamService:
         self.db.refresh(log)
         return log
 
-    def submit_exam(self, student_id: int, attempt_id: int, submissions: List[ExamSubmissionCreate]) -> ExamAttempt:
+    def submit_exam(self, user_id: int, attempt_id: int, submissions: List[ExamSubmissionCreate]) -> ExamAttempt:
+        from app.models.profile import StudentProfile
+        student = self.db.query(StudentProfile).filter(StudentProfile.user_id == user_id).first()
+        if not student:
+            raise HTTPException(status_code=400, detail="Student profile not found.")
+            
+        student_id = student.profile_id
+
         attempt = self.db.query(ExamAttempt).filter(
             ExamAttempt.attempt_id == attempt_id,
             ExamAttempt.student_id == student_id,
@@ -123,7 +143,78 @@ class ExamService:
             attempt.status = ExamAttemptStatus.GRADED
         else:
             attempt.status = ExamAttemptStatus.UNDER_REVIEW
+            
+            # Route to Mentor or Faculty
+            from app.models.profile import StudentProfile, MentorProfile, FacultyProfile
+            student_profile = self.db.query(StudentProfile).filter(StudentProfile.profile_id == student_id).first()
+            if student_profile:
+                domain_id = student_profile.domain_id
+                assigned = False
+                if domain_id:
+                    mentor = self.db.query(MentorProfile).filter(MentorProfile.domain_id == domain_id).first()
+                    if mentor:
+                        attempt.assigned_mentor_id = mentor.profile_id
+                        attempt.assigned_faculty_id = None
+                        assigned = True
+                
+                if not assigned:
+                    faculty = self.db.query(FacultyProfile).first()
+                    if faculty:
+                        attempt.assigned_faculty_id = faculty.profile_id
+                        attempt.assigned_mentor_id = None
 
         self.db.commit()
         self.db.refresh(attempt)
         return attempt
+
+    def review_exam(self, attempt_id: int, student_id: int, approve: bool, feedback: str, score: int, question_scores: Optional[Dict[int, int]] = None) -> ExamAttempt:
+        attempt = self.db.query(ExamAttempt).filter(
+            ExamAttempt.attempt_id == attempt_id,
+            ExamAttempt.student_id == student_id,
+            ExamAttempt.status == ExamAttemptStatus.UNDER_REVIEW
+        ).first()
+        
+        if not attempt:
+            raise HTTPException(status_code=400, detail="Exam not pending review for this student.")
+            
+        final_score = score
+        if question_scores:
+            calculated_score = 0
+            for sub in attempt.submissions:
+                if sub.question_id in question_scores:
+                    marks = question_scores[sub.question_id]
+                    sub.marks_awarded = marks
+                    calculated_score += marks
+                else:
+                    calculated_score += (sub.marks_awarded or 0)
+            final_score = calculated_score
+
+        attempt.status = ExamAttemptStatus.GRADED
+        attempt.score = final_score
+        # Using a general feedback string or attaching to submission is an option, we will just update the score for the attempt
+        # In a real system, you might add a feedback column to ExamAttempt
+        
+        self.db.commit()
+        self.db.refresh(attempt)
+        return attempt
+
+    def get_pending_exams_for_user(self, user_id: int) -> List[ExamAttempt]:
+        from app.models.profile import MentorProfile, FacultyProfile
+        mentor = self.db.query(MentorProfile).filter(MentorProfile.user_id == user_id).first()
+        faculty = self.db.query(FacultyProfile).filter(FacultyProfile.user_id == user_id).first()
+        
+        query = self.db.query(ExamAttempt).filter(ExamAttempt.status == ExamAttemptStatus.UNDER_REVIEW)
+        
+        filters = []
+        if mentor:
+            filters.append(ExamAttempt.assigned_mentor_id == mentor.profile_id)
+        if faculty:
+            filters.append(ExamAttempt.assigned_faculty_id == faculty.profile_id)
+            
+        if not filters:
+            return []
+            
+        from sqlalchemy import or_
+        query = query.filter(or_(*filters))
+        
+        return query.all()

@@ -54,10 +54,14 @@ class ExamAttempt(Base, TimestampMixin, SoftDeleteMixin):
     score = Column(Integer, nullable=True)
     status = Column(Enum(ExamAttemptStatus), default=ExamAttemptStatus.IN_PROGRESS, index=True)
     tab_switch_count = Column(Integer, default=0) # Quick denormalized counter for flagging
+    assigned_mentor_id = Column(Integer, ForeignKey("mentor_profiles.profile_id"), nullable=True, index=True)
+    assigned_faculty_id = Column(Integer, ForeignKey("faculty_profiles.profile_id"), nullable=True, index=True)
     
     exam = relationship("Exam", back_populates="attempts")
     monitoring_logs = relationship("MonitoringLog", back_populates="attempt", cascade="all, delete-orphan")
     submissions = relationship("ExamSubmission", back_populates="attempt", cascade="all, delete-orphan")
+    assigned_mentor = relationship("MentorProfile", foreign_keys=[assigned_mentor_id])
+    assigned_faculty = relationship("FacultyProfile", foreign_keys=[assigned_faculty_id])
 
 class MonitoringLog(Base, TimestampMixin): # Soft delete not heavily needed for logs
     __tablename__ = "monitoring_logs"

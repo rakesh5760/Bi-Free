@@ -2,7 +2,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from app.models.learning import LearningPath, Milestone, Assignment, Quiz, StudentProgress, ProgressStatus
-from app.models.profile import StudentProfile
+from app.models.profile import StudentProfile, MentorProfile, FacultyProfile
 from app.services.student_service import StudentService
 
 class LearningService:
@@ -41,11 +41,28 @@ class LearningService:
             
         progress.status = ProgressStatus.PENDING_REVIEW
         progress.submission_url = submission_url
+
+        # Route to Mentor or Faculty
+        domain_id = student_profile.domain_id
+        assigned = False
+        if domain_id:
+            mentor = self.db.query(MentorProfile).filter(MentorProfile.domain_id == domain_id).first()
+            if mentor:
+                progress.assigned_mentor_id = mentor.profile_id
+                progress.assigned_faculty_id = None
+                assigned = True
+        
+        if not assigned:
+            faculty = self.db.query(FacultyProfile).first()
+            if faculty:
+                progress.assigned_faculty_id = faculty.profile_id
+                progress.assigned_mentor_id = None
+
         self.db.commit()
         self.db.refresh(progress)
         return progress
 
-    def review_assignment(self, assignment_id: int, student_id: int, approve: bool, feedback: str) -> StudentProgress:
+    def review_assignment(self, assignment_id: int, student_id: int, approve: bool, feedback: str, score: Optional[int] = None, reviewer_user_id: Optional[int] = None) -> StudentProgress:
         """
         Mentor reviews an assignment.
         """
@@ -64,6 +81,8 @@ class LearningService:
             
         progress.status = ProgressStatus.COMPLETED if approve else ProgressStatus.REJECTED
         progress.feedback = feedback
+        if score is not None:
+            progress.score = score
         
         if approve:
             # Add a trust score boost for completing an assignment
@@ -89,3 +108,27 @@ class LearningService:
         ).all()
         
         return recommended_paths
+
+    def get_pending_reviews_for_user(self, user_id: int) -> List[StudentProgress]:
+        """
+        Get all pending reviews assigned to this user's mentor or faculty profile.
+        """
+        mentor = self.db.query(MentorProfile).filter(MentorProfile.user_id == user_id).first()
+        faculty = self.db.query(FacultyProfile).filter(FacultyProfile.user_id == user_id).first()
+        
+        query = self.db.query(StudentProgress).filter(StudentProgress.status == ProgressStatus.PENDING_REVIEW)
+        
+        filters = []
+        if mentor:
+            filters.append(StudentProgress.assigned_mentor_id == mentor.profile_id)
+        if faculty:
+            filters.append(StudentProgress.assigned_faculty_id == faculty.profile_id)
+            
+        if not filters:
+            return []
+            
+        # Use OR to combine conditions if the user is somehow both
+        from sqlalchemy import or_
+        query = query.filter(or_(*filters))
+        
+        return query.all()

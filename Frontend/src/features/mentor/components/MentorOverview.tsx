@@ -36,20 +36,32 @@ export function MentorOverview() {
   const navigate = useNavigate();
   const [analytics, setAnalytics] = useState<any>(null);
   const [allocations, setAllocations] = useState<any[]>([]);
+  const [pendingExamReviews, setPendingExamReviews] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [gradingExamId, setGradingExamId] = useState<number | null>(null);
+  const [gradeFeedback, setGradeFeedback] = useState<string>("");
+  
+  // Exam Correction State
+  const [examDetails, setExamDetails] = useState<any>(null);
+  const [questionScores, setQuestionScores] = useState<Record<number, number>>({});
+  const [isLoadingExam, setIsLoadingExam] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [analyticsRes, allocationsRes] = await Promise.all([
+        const [analyticsRes, allocationsRes, examReviewsRes] = await Promise.all([
           api.get('/analytics/mentor/me'),
-          api.get('/mentors/allocations/me')
+          api.get('/mentors/allocations/me'),
+          api.get('/exams/pending-reviews')
         ]);
         if (analyticsRes.data.success) {
           setAnalytics(analyticsRes.data.data);
         }
         if (allocationsRes.data.success) {
           setAllocations(allocationsRes.data.data || []);
+        }
+        if (examReviewsRes.data.success) {
+          setPendingExamReviews(examReviewsRes.data.data || []);
         }
       } catch (err) {
         console.error("Failed to fetch mentor data", err);
@@ -59,6 +71,44 @@ export function MentorOverview() {
     }
     fetchData();
   }, []);
+
+  const handleExamGradeSubmission = async (attemptId: number, studentId: number) => {
+    try {
+      const totalScore = Object.values(questionScores).reduce((a, b) => a + b, 0);
+      await api.post(`/exams/attempts/${attemptId}/review`, {
+        student_id: studentId,
+        approve: totalScore >= (examDetails?.passing_score || 50),
+        feedback: gradeFeedback,
+        score: totalScore,
+        question_scores: questionScores
+      });
+      setPendingExamReviews(prev => prev.filter(r => r.attempt_id !== attemptId));
+      setGradingExamId(null);
+      setGradeFeedback("");
+      setQuestionScores({});
+      setExamDetails(null);
+    } catch (err) {
+      console.error("Failed to submit exam grade", err);
+    }
+  };
+
+  const handleOpenExamCorrection = async (review: any) => {
+    setGradingExamId(review.attempt_id);
+    setIsLoadingExam(true);
+    setExamDetails(null);
+    setQuestionScores({});
+    setGradeFeedback("");
+    try {
+      const res = await api.get(`/exams/${review.exam_id}`);
+      if (res.data.success) {
+        setExamDetails(res.data.data);
+      }
+    } catch (err) {
+      console.error("Failed to load exam details");
+    } finally {
+      setIsLoadingExam(false);
+    }
+  };
 
   const total = (analytics?.total_active_allocations || 0) + (analytics?.total_completed_allocations || 0);
   const successRate = total > 0 ? Math.round((analytics.total_completed_allocations / total) * 100) : 100;
@@ -330,6 +380,166 @@ export function MentorOverview() {
           </Card>
         </div>
       </motion.div>
+
+      {/* Pending Exam Verifications */}
+      <motion.div variants={fadeIn} className="grid gap-6">
+        <Card className="bg-card/50 backdrop-blur-sm border-border/50 shadow-sm mt-6">
+          <CardHeader className="border-b border-border/50 pb-4">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-indigo-500" /> Pending Exam Verifications
+            </CardTitle>
+            <CardDescription>Exam attempts waiting for your review</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y divide-border/50">
+              {isLoading ? (
+                <div className="p-8 flex justify-center"><Loader2 className="animate-spin h-6 w-6 text-indigo-500" /></div>
+              ) : pendingExamReviews.length === 0 ? (
+                <div className="p-8 text-center text-muted-foreground font-medium">No pending exams to review.</div>
+              ) : pendingExamReviews.map((review: any, i: number) => (
+                <div key={i} className="p-6 hover:bg-muted/30 transition-colors flex flex-col gap-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-bold text-foreground text-sm">Exam #{review.exam_id} Attempt #{review.attempt_id} (Student #{review.student_id})</div>
+                      <div className="text-xs text-muted-foreground mt-1">Status: {review.status}</div>
+                    </div>
+                    <Badge className="bg-indigo-500/10 text-indigo-500 border-indigo-500/20 uppercase tracking-wider text-[10px]">
+                      Needs Review
+                    </Badge>
+                  </div>
+                  
+                  {gradingExamId === review.attempt_id ? (
+                    <div className="flex justify-end mt-2">
+                      <span className="text-xs text-indigo-500 flex items-center gap-1">
+                        <Loader2 className="animate-spin h-3 w-3" /> Opening Correction View...
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex justify-end mt-2">
+                      <Button size="sm" variant="outline" onClick={() => handleOpenExamCorrection(review)}>
+                        Grade Exam
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Exam Correction Modal */}
+      {gradingExamId && examDetails && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8">
+          <div className="bg-card border border-border shadow-2xl rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="p-6 border-b border-border/50 flex justify-between items-center bg-muted/20">
+              <div>
+                <h2 className="text-xl font-bold">Exam Correction</h2>
+                <p className="text-sm text-muted-foreground">
+                  Reviewing Attempt #{gradingExamId}
+                </p>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setGradingExamId(null)}>
+                <CheckCircle2 className="h-5 w-5 rotate-45" />
+              </Button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {isLoadingExam ? (
+                <div className="flex justify-center py-12"><Loader2 className="animate-spin h-8 w-8 text-indigo-500" /></div>
+              ) : examDetails ? (
+                <>
+                  <div className="mb-6">
+                    <h3 className="font-semibold text-lg">{examDetails.title}</h3>
+                    <p className="text-sm text-muted-foreground">{examDetails.description || "No description provided."}</p>
+                  </div>
+                  
+                  <div className="space-y-8">
+                    {examDetails.questions?.map((q: any, index: number) => {
+                      const attempt = pendingExamReviews.find(r => r.attempt_id === gradingExamId);
+                      const submission = attempt?.submissions?.find((s: any) => s.question_id === q.question_id);
+                      
+                      return (
+                        <div key={q.question_id} className="border border-border rounded-xl p-5 bg-background/50">
+                          <div className="flex justify-between items-start gap-4 mb-4">
+                            <div>
+                              <h4 className="font-medium text-sm text-primary mb-1">Question {index + 1} ({q.question_type})</h4>
+                              <p className="text-sm">{q.text}</p>
+                            </div>
+                            <Badge variant="outline">{q.marks} Marks Max</Badge>
+                          </div>
+                          
+                          <div className="mt-4 bg-muted/30 p-4 rounded-lg font-mono text-sm overflow-x-auto whitespace-pre-wrap">
+                            {submission ? (
+                              submission.answer?.code || submission.answer?.choice || JSON.stringify(submission.answer)
+                            ) : (
+                              <span className="text-muted-foreground italic">No answer submitted by student.</span>
+                            )}
+                          </div>
+                          
+                          <div className="mt-6 flex items-center justify-between border-t border-border/50 pt-4">
+                            <span className="text-sm font-semibold">Award Marks:</span>
+                            <div className="flex items-center gap-2">
+                              <Button 
+                                size="sm" 
+                                variant={questionScores[q.question_id] === q.marks ? "default" : "outline"}
+                                className={questionScores[q.question_id] === q.marks ? "bg-green-600 hover:bg-green-700 text-white" : ""}
+                                onClick={() => setQuestionScores(prev => ({ ...prev, [q.question_id]: q.marks }))}
+                              >
+                                Right
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant={questionScores[q.question_id] === 0 ? "destructive" : "outline"}
+                                onClick={() => setQuestionScores(prev => ({ ...prev, [q.question_id]: 0 }))}
+                              >
+                                Wrong
+                              </Button>
+                              <span className="text-sm text-muted-foreground ml-2">/ {q.marks} marks</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-8 pt-6 border-t border-border">
+                    <label className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-2 block">General Feedback</label>
+                    <textarea 
+                      value={gradeFeedback} 
+                      onChange={(e) => setGradeFeedback(e.target.value)}
+                      placeholder="Provide overall constructive feedback for the student..."
+                      className="w-full px-4 py-3 bg-background border border-border rounded-lg text-sm min-h-[100px] focus:ring-2 focus:ring-indigo-500 outline-none"
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-12 text-muted-foreground">Failed to load exam details.</div>
+              )}
+            </div>
+            
+            <div className="p-4 border-t border-border/50 bg-muted/10 flex justify-between items-center">
+              <div className="text-lg font-bold">
+                Total Score: <span className="text-indigo-500">{Object.values(questionScores).reduce((a, b) => a + b, 0)}</span>
+              </div>
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={() => setGradingExamId(null)}>Cancel</Button>
+                <Button 
+                  onClick={() => {
+                    const attempt = pendingExamReviews.find(r => r.attempt_id === gradingExamId);
+                    if (attempt) handleExamGradeSubmission(attempt.attempt_id, attempt.student_id);
+                  }}
+                  disabled={isLoadingExam || !examDetails}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                >
+                  Submit Correction
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </motion.div>
   );
 }

@@ -98,5 +98,9 @@ class StudentProgress(Base, TimestampMixin, SoftDeleteMixin):
     score = Column(Integer, nullable=True) # For quizzes
     submission_url = Column(String(500), nullable=True) # For assignments
     feedback = Column(Text, nullable=True) # Mentor feedback
+    assigned_mentor_id = Column(Integer, ForeignKey("mentor_profiles.profile_id"), nullable=True, index=True)
+    assigned_faculty_id = Column(Integer, ForeignKey("faculty_profiles.profile_id"), nullable=True, index=True)
     
     student = relationship("StudentProfile")
+    assigned_mentor = relationship("MentorProfile", foreign_keys=[assigned_mentor_id])
+    assigned_faculty = relationship("FacultyProfile", foreign_keys=[assigned_faculty_id])

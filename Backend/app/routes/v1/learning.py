@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -27,6 +27,7 @@ class AssignmentReview(BaseModel):
     student_id: int
     approve: bool
     feedback: str
+    score: Optional[int] = None
 
 
 # ── Module completion mapping ──────────────────────────────────────────────────
@@ -172,8 +173,27 @@ def review_assignment(
     Mentor reviews a student's assignment submission.
     """
     svc = LearningService(db)
-    progress = svc.review_assignment(assignment_id, request.student_id, request.approve, request.feedback)
+    progress = svc.review_assignment(
+        assignment_id=assignment_id, 
+        student_id=request.student_id, 
+        approve=request.approve, 
+        feedback=request.feedback, 
+        score=request.score,
+        reviewer_user_id=current_user.user_id
+    )
     return success_response(data=progress, message="Assignment reviewed.")
+
+@router.get("/assignments/pending-reviews", response_model=StandardResponse[List[StudentProgress]])
+def get_pending_reviews(
+    current_user: User = Depends(mentor_checker),
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Get assignments pending review for the current mentor or faculty.
+    """
+    svc = LearningService(db)
+    reviews = svc.get_pending_reviews_for_user(current_user.user_id)
+    return success_response(data=reviews, message=f"Found {len(reviews)} pending reviews.")
 
 @router.get("/recommendations", response_model=StandardResponse[List[LearningPath]])
 def get_recommendations(
