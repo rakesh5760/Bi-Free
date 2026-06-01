@@ -38,8 +38,19 @@ MODULE_ASSIGNMENT_MAP = {
     "fs-mod-3": 3,
     "fe-mod-1": 4,
     "fe-mod-2": 5,
-    "be-mod-1": 6,
-    "be-mod-2": 7
+    "fe-mod-3": 6,
+    "be-mod-1": 7,
+    "be-mod-2": 8,
+    "be-mod-3": 9,
+    "cs-mod-1": 10,
+    "cs-mod-2": 11,
+    "cs-mod-3": 12,
+    "ds-mod-1": 13,
+    "ds-mod-2": 14,
+    "ds-mod-3": 15,
+    "ai-mod-1": 16,
+    "ai-mod-2": 17,
+    "ai-mod-3": 18
 }
 
 REVERSE_MAP = {v: k for k, v in MODULE_ASSIGNMENT_MAP.items()}
@@ -62,7 +73,7 @@ def get_my_completed_modules(
     rows = db.query(StudentProgressModel).filter(
         StudentProgressModel.student_id == student_profile.profile_id,
         StudentProgressModel.item_type == "Assignment",
-        StudentProgressModel.status == "COMPLETED"
+        StudentProgressModel.status.in_(["COMPLETED", "PENDING_REVIEW"])
     ).all()
     
     completed_keys = [REVERSE_MAP[r.item_id] for r in rows if r.item_id in REVERSE_MAP]
@@ -125,7 +136,7 @@ def complete_module(
     rows = db.query(StudentProgressModel).filter(
         StudentProgressModel.student_id == student_profile.profile_id,
         StudentProgressModel.item_type == "Assignment",
-        StudentProgressModel.status == "COMPLETED"
+        StudentProgressModel.status.in_(["COMPLETED", "PENDING_REVIEW"])
     ).all()
     completed_keys = [REVERSE_MAP[r.item_id] for r in rows if r.item_id in REVERSE_MAP]
 

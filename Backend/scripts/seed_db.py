@@ -52,17 +52,19 @@ def seed():
 
         # 1. Core Lookups
         print("Seeding Domains, Skills, and Levels...")
-        web_dev = Domain(name="Web Development", description="Frontend and Backend Engineering")
-        ai = Domain(name="Artificial Intelligence", description="Machine Learning and AI Ops")
-        db.add_all([web_dev, ai])
-        db.commit()
-
-        react_skill = Skill(name="React.js", domain_id=web_dev.domain_id)
-        fastapi_skill = Skill(name="FastAPI", domain_id=web_dev.domain_id)
-        python_skill = Skill(name="Python", domain_id=ai.domain_id)
+        fullstack_dev = Domain(name="Full Stack Web Development", description="Frontend and Backend Engineering")
+        frontend_dev = Domain(name="Frontend Engineering", description="UI/UX, React, and Frontend Tooling")
+        backend_dev = Domain(name="Backend & APIs", description="Server architecture, databases, APIs")
+        ai = Domain(name="AI & Agents", description="Machine Learning and AI Ops")
         cyber_domain = Domain(name="Cyber Security", description="Information Security & Ethical Hacking")
         data_domain = Domain(name="Data Science", description="Data Analytics and Engineering")
-        db.add_all([react_skill, fastapi_skill, python_skill, cyber_domain, data_domain])
+        db.add_all([fullstack_dev, frontend_dev, backend_dev, ai, cyber_domain, data_domain])
+        db.commit()
+
+        react_skill = Skill(name="React.js", domain_id=frontend_dev.domain_id)
+        fastapi_skill = Skill(name="FastAPI", domain_id=backend_dev.domain_id)
+        python_skill = Skill(name="Python", domain_id=ai.domain_id)
+        db.add_all([react_skill, fastapi_skill, python_skill])
         
         level_d = Level(name="Level D", required_trust_score=0.0)
         level_c = Level(name="Level C", required_trust_score=20.0)
@@ -100,11 +102,11 @@ def seed():
 
         print("Seeding Profiles...")
         fac_prof = FacultyProfile(user_id=faculty_user.user_id, department="Computer Science")
-        ment_prof = MentorProfile(user_id=mentor_user.user_id, domain_id=web_dev.domain_id, rating=4.9)
+        ment_prof = MentorProfile(user_id=mentor_user.user_id, domain_id=fullstack_dev.domain_id, rating=4.9)
         ment_ai_prof = MentorProfile(user_id=mentor_ai.user_id, domain_id=ai.domain_id, rating=4.8)
         ment_cyber_prof = MentorProfile(user_id=mentor_cyber.user_id, domain_id=cyber_domain.domain_id, rating=5.0)
         
-        client_prof = ClientProfile(user_id=client_user.user_id, company_name="TechStart Innovations", domain_id=web_dev.domain_id)
+        client_prof = ClientProfile(user_id=client_user.user_id, company_name="TechStart Innovations", domain_id=fullstack_dev.domain_id)
         
         # Student A is elite, ready for projects
         stu_a_prof = StudentProfile(user_id=student_a.user_id, level_id=level_a.level_id, trust_score=95.0)
@@ -130,13 +132,17 @@ def seed():
         # Refresh to get IDs
         db.refresh(client_prof)
         db.refresh(ment_prof)
+        db.refresh(ment_ai_prof)
+        db.refresh(ment_cyber_prof)
         db.refresh(stu_a_prof)
+        db.refresh(stu_c_prof)
+        db.refresh(stu_fs3_prof)
 
         # 3. Projects and Allocations
         print("Seeding Active Ecosystem Projects...")
         project1 = Project(
             client_id=client_prof.profile_id,
-            domain_id=web_dev.domain_id,
+            domain_id=fullstack_dev.domain_id,
             title="SaaS Analytics Dashboard",
             description="Build a full-stack React and FastAPI dashboard for real-time metrics.",
             budget=5000.00,
@@ -147,7 +153,7 @@ def seed():
         
         project2 = Project(
             client_id=client_prof.profile_id,
-            domain_id=web_dev.domain_id,
+            domain_id=fullstack_dev.domain_id,
             title="webdevelopment",
             description="Looking for a web development team.",
             budget=3000.00,
@@ -193,6 +199,48 @@ def seed():
         )
         db.add_all([task1, task2])
         db.commit()
+
+        # 6. Level C Demo Projects
+        print("Seeding Demo Projects for Level C Students...")
+        demo_projects_data = [
+            (fullstack_dev.domain_id, "E-commerce Platform (Full Stack)", "Build a complete e-commerce platform.", stu_fs3_prof.profile_id, ment_prof.profile_id),
+            (fullstack_dev.domain_id, "Portfolio Website (Frontend)", "Build a stunning portfolio website.", stu_fs3_prof.profile_id, ment_prof.profile_id),
+            (fullstack_dev.domain_id, "Authentication Service (Backend)", "Build a secure OAuth2 authentication service.", stu_fs3_prof.profile_id, ment_prof.profile_id),
+            (cyber_domain.domain_id, "Vulnerability Scanner", "Develop an automated network vulnerability scanner.", stu_c_prof.profile_id, ment_cyber_prof.profile_id),
+            (data_domain.domain_id, "Sales Forecasting", "Build a predictive model for retail sales.", stu_c_prof.profile_id, ment_ai_prof.profile_id),
+            (ai.domain_id, "AI Research Assistant", "Build a LangChain-powered research assistant.", stu_c_prof.profile_id, ment_ai_prof.profile_id)
+        ]
+
+        for dom_id, p_title, p_desc, student_id, mentor_id in demo_projects_data:
+            demo_proj = Project(
+                client_id=client_prof.profile_id,
+                domain_id=dom_id,
+                title=p_title,
+                description=p_desc,
+                budget=1500.00,
+                status=ProjectStatus.IN_PROGRESS,
+                deadline=datetime.utcnow().date() + timedelta(days=60)
+            )
+            db.add(demo_proj)
+            db.commit()
+            db.refresh(demo_proj)
+
+            demo_alloc = ProjectAllocation(
+                project_id=demo_proj.project_id,
+                mentor_id=mentor_id,
+                team_name=f"{p_title} Team"
+            )
+            db.add(demo_alloc)
+            db.commit()
+            db.refresh(demo_alloc)
+
+            demo_member = TeamMember(
+                allocation_id=demo_alloc.allocation_id,
+                student_id=student_id,
+                role="Domain Specialist"
+            )
+            db.add(demo_member)
+            db.commit()
 
         print("Database Seeded Successfully! The platform is now ALIVE.")
         print("--- Demo Credentials ---")

@@ -25,6 +25,7 @@ class StudentProfile(StudentProfileBase, ProfileTimestamp):
     last_name: Optional[str] = None
     email: Optional[str] = None
     level: Optional[Level] = None
+    domain: Optional[Domain] = None
     skills: List[Skill] = []
     class Config:
         from_attributes = True

@@ -19,6 +19,7 @@ interface User {
   avatarUrl?: string;
   phone_number?: string;
   studentLevel?: StudentLevel; // Only for students
+  domain?: string | null; // Student's or mentor's selected domain
   reputation?: ReputationMetrics; // Faculty and Mentors can view this
 }
 

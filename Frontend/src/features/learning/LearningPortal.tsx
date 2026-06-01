@@ -31,312 +31,7 @@ const slideIn = {
   visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease: "easeOut" as const } }
 };
 
-/* ─── types ──────────────────────────────────────────────── */
-interface Lecture {
-  id: string;
-  title: string;
-  duration: string;
-  type: "Video" | "Article";
-  preview?: string; // short description shown in module viewer
-}
-
-interface AssignmentItem {
-  id: string;
-  title: string;
-  description: string;
-  points: number;
-}
-
-interface Module {
-  id: string;
-  title: string;
-  description: string;
-  lectures: Lecture[];
-  assignments: AssignmentItem[];
-}
-
-interface Domain {
-  id: string;
-  title: string;
-  icon: any;
-  duration: string;
-  level: string;
-  color: string;      // gradient classes
-  bgLight: string;    // icon bg class
-  textCol: string;    // icon text color class
-  modules: Module[];
-}
-
-/* ─── mock data ──────────────────────────────────────────── */
-const DOMAINS: Domain[] = [
-  {
-    id: "fullstack",
-    title: "Full Stack Web Development",
-    icon: Globe,
-    duration: "6 months",
-    level: "Intermediate",
-    color: "from-blue-500 to-cyan-500",
-    bgLight: "bg-blue-500/10",
-    textCol: "text-blue-500",
-    modules: [
-      {
-        id: "fs-mod-1",
-        title: "Web Fundamentals",
-        description: "Build a rock-solid understanding of the web's core trio — HTML5, CSS3, and vanilla JavaScript — so every advanced concept you learn afterward has strong roots.",
-        lectures: [
-          {
-            id: "fs-lec-1",
-            title: "Introduction to HTML5 & CSS3",
-            duration: "25 min",
-            type: "Video",
-            preview: "Learn the building blocks of every website. Covers semantic tags, document structure, and your first styled page."
-          },
-          {
-            id: "fs-lec-2",
-            title: "Responsive Layouts with Flexbox & CSS Grid",
-            duration: "45 min",
-            type: "Video",
-            preview: "Master modern CSS layout systems and build fully responsive interfaces without any framework."
-          },
-          {
-            id: "fs-lec-3",
-            title: "JavaScript Basics & DOM Manipulation",
-            duration: "15 min",
-            type: "Article",
-            preview: "Understand variables, functions, events, and how JavaScript controls the live page through the DOM."
-          }
-        ],
-        assignments: [
-          {
-            id: "fs-assign-1",
-            title: "Create a Portfolio Landing Page",
-            description: "Design a fully responsive portfolio page using raw HTML & CSS. Must work on mobile, tablet, and desktop.",
-            points: 100
-          }
-        ]
-      },
-      {
-        id: "fs-mod-2",
-        title: "Frontend Frameworks (React)",
-        description: "Adopt the industry's most widely used UI library. Learn component thinking, state, and the React lifecycle that powers modern web apps.",
-        lectures: [
-          {
-            id: "fs-lec-4",
-            title: "React Functional Components & Props",
-            duration: "30 min",
-            type: "Video",
-            preview: "Build reusable UI components and compose them into complex interfaces using the props system."
-          },
-          {
-            id: "fs-lec-5",
-            title: "State Management: useState & useEffect",
-            duration: "40 min",
-            type: "Video",
-            preview: "Control dynamic data in your components and react to side-effects like API calls and timers."
-          },
-          {
-            id: "fs-lec-6",
-            title: "Global State Management with Zustand",
-            duration: "20 min",
-            type: "Article",
-            preview: "Move beyond prop-drilling and manage shared application state with a lightweight store."
-          }
-        ],
-        assignments: [
-          {
-            id: "fs-assign-2",
-            title: "Build an Authentication Flow",
-            description: "Implement a complete JWT-based login system using React. Include protected routes, token storage, and logout handling.",
-            points: 150
-          }
-        ]
-      },
-      {
-        id: "fs-mod-3",
-        title: "Backend & Databases",
-        description: "Step behind the browser and build the servers, APIs, and database schemas that power real-world applications.",
-        lectures: [
-          {
-            id: "fs-lec-7",
-            title: "Introduction to Node.js & Express",
-            duration: "35 min",
-            type: "Video",
-            preview: "Set up a Node.js server, define routes, and handle HTTP requests and responses with Express."
-          },
-          {
-            id: "fs-lec-8",
-            title: "RESTful API Design & Routing",
-            duration: "30 min",
-            type: "Video",
-            preview: "Design clean, versioned REST APIs following industry conventions and HTTP semantics."
-          },
-          {
-            id: "fs-lec-9",
-            title: "Relational Database Design with SQL",
-            duration: "25 min",
-            type: "Article",
-            preview: "Model your data using tables, relationships, and constraints that keep your data consistent."
-          }
-        ],
-        assignments: [
-          {
-            id: "fs-assign-3",
-            title: "Database Schema Design",
-            description: "Design a normalized relational schema for an e-commerce platform with products, orders, and users.",
-            points: 100
-          }
-        ]
-      }
-    ]
-  },
-  {
-    id: "frontend",
-    title: "Frontend Engineering",
-    icon: Code,
-    duration: "4 months",
-    level: "Beginner",
-    color: "from-purple-500 to-pink-500",
-    bgLight: "bg-purple-500/10",
-    textCol: "text-purple-500",
-    modules: [
-      {
-        id: "fe-mod-1",
-        title: "HTML/CSS Mastery",
-        description: "Go beyond basics — learn advanced CSS patterns, accessibility-first markup, and professional design system methodologies.",
-        lectures: [
-          {
-            id: "fe-lec-1",
-            title: "Advanced Semantic HTML & Accessibility (a11y)",
-            duration: "30 min",
-            type: "Video",
-            preview: "Write HTML that works for screen readers, keyboard navigation, and all users by default."
-          },
-          {
-            id: "fe-lec-2",
-            title: "CSS Architectures: BEM & Utility-First",
-            duration: "20 min",
-            type: "Article",
-            preview: "Apply scalable naming conventions and understand when to use utility classes vs. component classes."
-          },
-          {
-            id: "fe-lec-3",
-            title: "TailwindCSS Setup & Custom Configuration",
-            duration: "35 min",
-            type: "Video",
-            preview: "Configure a Tailwind project from scratch, extend the theme, and build a mini design token system."
-          }
-        ],
-        assignments: [
-          {
-            id: "fe-assign-1",
-            title: "Recreate a Complex UI Dashboard Layout",
-            description: "Given a Figma mockup, implement the layout pixel-perfect in HTML/CSS with full responsiveness.",
-            points: 100
-          }
-        ]
-      },
-      {
-        id: "fe-mod-2",
-        title: "UI State & Build Systems",
-        description: "Level up your engineering foundation with TypeScript, modern bundlers, and robust form management.",
-        lectures: [
-          {
-            id: "fe-lec-4",
-            title: "Introduction to TypeScript in React",
-            duration: "40 min",
-            type: "Video",
-            preview: "Add type safety to your components, props, and API responses to eliminate entire categories of bugs."
-          },
-          {
-            id: "fe-lec-5",
-            title: "Vite Build Tool & Environment Variables",
-            duration: "15 min",
-            type: "Article",
-            preview: "Configure Vite for blazing-fast dev builds, code splitting, and safe secrets management."
-          }
-        ],
-        assignments: [
-          {
-            id: "fe-assign-2",
-            title: "Build a Multi-Step Wizard Form",
-            description: "Create a fully-typed multi-step wizard using react-hook-form, with validation on each step before advancing.",
-            points: 120
-          }
-        ]
-      }
-    ]
-  },
-  {
-    id: "backend",
-    title: "Backend & APIs",
-    icon: Database,
-    duration: "5 months",
-    level: "Intermediate",
-    color: "from-emerald-500 to-teal-500",
-    bgLight: "bg-emerald-500/10",
-    textCol: "text-emerald-500",
-    modules: [
-      {
-        id: "be-mod-1",
-        title: "Server Architectures",
-        description: "Understand how server processes work under the hood — event loops, middleware pipelines, and request lifecycles that define high-performance APIs.",
-        lectures: [
-          {
-            id: "be-lec-1",
-            title: "Node.js Event Loop & Non-blocking I/O",
-            duration: "25 min",
-            type: "Video",
-            preview: "Demystify how Node handles thousands of simultaneous requests with a single thread."
-          },
-          {
-            id: "be-lec-2",
-            title: "Express.js Custom Middleware Development",
-            duration: "30 min",
-            type: "Video",
-            preview: "Write reusable middleware for auth, logging, error handling, and request transformation."
-          }
-        ],
-        assignments: [
-          {
-            id: "be-assign-1",
-            title: "Build an API Gateway / Proxy Server",
-            description: "Write a proxy server with custom rate-limiting middleware and structured request logging.",
-            points: 130
-          }
-        ]
-      },
-      {
-        id: "be-mod-2",
-        title: "Data Persistence",
-        description: "Design databases that last — choose the right ORM, write clean migrations, and optimize queries for production loads.",
-        lectures: [
-          {
-            id: "be-lec-3",
-            title: "Introduction to ORMs (Prisma & SQLAlchemy)",
-            duration: "35 min",
-            type: "Video",
-            preview: "Map your database schema to code objects and run type-safe queries without raw SQL."
-          },
-          {
-            id: "be-lec-4",
-            title: "Database Migrations & Seed Scripts",
-            duration: "20 min",
-            type: "Article",
-            preview: "Version-control your schema changes and maintain consistent dev/staging/prod environments."
-          }
-        ],
-        assignments: [
-          {
-            id: "be-assign-2",
-            title: "Optimize Slow SQL Queries",
-            description: "Analyze and fix N+1 query problems, add proper indexes, and verify improvements with EXPLAIN plans.",
-            points: 100
-          }
-        ]
-      }
-    ]
-  }
-];
+import { DOMAINS, Domain } from "./mockData";
 
 /* ─── helper ─────────────────────────────────────────────── */
 function getDomainProgress(domain: Domain, completedModules: string[]) {
@@ -644,7 +339,7 @@ function ModuleList({
    MAIN PAGE
 ═══════════════════════════════════════════════════════════ */
 export default function LearningPortal() {
-  const { user } = useAuthStore();
+  const { user, updateUser } = useAuthStore();
   const level = user?.studentLevel || 'D';
 
   // Navigation state
@@ -670,32 +365,60 @@ export default function LearningPortal() {
       }
     };
     load();
-  }, []);
+
+    // Ensure we have the latest user profile (specifically domain)
+    if (user && user.role === 'student' && user.domain === undefined) {
+      api.get('/users/me').then(res => {
+        const userData = res.data.data;
+        if (userData?.student_profile?.domain?.name) {
+          updateUser({ domain: userData.student_profile.domain.name });
+        } else {
+          updateUser({ domain: null });
+        }
+      }).catch(console.error);
+    }
+  }, [user, updateUser]);
 
   // Derived
   const selectedDomain = DOMAINS.find(d => d.id === selectedDomainId) ?? null;
   const activeModule   = selectedDomain?.modules.find(m => m.id === activeModuleId) ?? null;
 
+  const filteredDomains = user?.domain 
+    ? DOMAINS.filter(d => d.title.toLowerCase() === user.domain?.toLowerCase())
+    : DOMAINS;
+
   // Overall progress for the selected domain (shown in banner)
   const bannerProgress = selectedDomain
     ? getDomainProgress(selectedDomain, completedModules)
-    : Math.round(
-        DOMAINS.reduce((acc, d) => acc + getDomainProgress(d, completedModules), 0) / DOMAINS.length
-      );
+    : filteredDomains.length > 0 
+      ? Math.round(
+          filteredDomains.reduce((acc, d) => acc + getDomainProgress(d, completedModules), 0) / filteredDomains.length
+        )
+      : 0;
 
   const handleFinishModule = async (submissionUrl: string) => {
     if (!activeModuleId || completedModules.includes(activeModuleId)) return;
     setIsSaving(true);
     
-    // Map module key to assignment ID
     const MODULE_ASSIGNMENT_MAP: Record<string, number> = {
       "fs-mod-1": 1,
       "fs-mod-2": 2,
       "fs-mod-3": 3,
       "fe-mod-1": 4,
       "fe-mod-2": 5,
-      "be-mod-1": 6,
-      "be-mod-2": 7
+      "fe-mod-3": 6,
+      "be-mod-1": 7,
+      "be-mod-2": 8,
+      "be-mod-3": 9,
+      "cs-mod-1": 10,
+      "cs-mod-2": 11,
+      "cs-mod-3": 12,
+      "ds-mod-1": 13,
+      "ds-mod-2": 14,
+      "ds-mod-3": 15,
+      "ai-mod-1": 16,
+      "ai-mod-2": 17,
+      "ai-mod-3": 18
     };
     
     const assignmentId = MODULE_ASSIGNMENT_MAP[activeModuleId];
@@ -831,9 +554,10 @@ export default function LearningPortal() {
                   exit={{ opacity: 0 }}
                   className="grid gap-6 md:grid-cols-3"
                 >
-                  {DOMAINS.map(domain => {
-                    const progress = getDomainProgress(domain, completedModules);
-                    const completedCount = domain.modules.filter(m => completedModules.includes(m.id)).length;
+                  {filteredDomains.length > 0 ? (
+                    filteredDomains.map(domain => {
+                      const progress = getDomainProgress(domain, completedModules);
+                      const completedCount = domain.modules.filter(m => completedModules.includes(m.id)).length;
 
                     return (
                       <motion.div variants={fadeUp} key={domain.id}>
@@ -872,7 +596,11 @@ export default function LearningPortal() {
                         </Card>
                       </motion.div>
                     );
-                  })}
+                  })) : (
+                    <div className="col-span-3 text-center p-8 text-muted-foreground border border-dashed rounded-xl bg-card/20">
+                      No learning paths available for your domain.
+                    </div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>

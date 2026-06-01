@@ -151,7 +151,10 @@ def safe_migrate():
             paths = [
                 ("Full Stack Web Development Path", "Comprehensive Full Stack developer path", "Full Stack Web Development"),
                 ("Frontend Engineering Path", "Complete frontend developer training", "Frontend Engineering"),
-                ("Backend & APIs Path", "High-performance backend systems design", "Backend & APIs")
+                ("Backend & APIs Path", "High-performance backend systems design", "Backend & APIs"),
+                ("Cyber Security Path", "Advanced cyber security protocols and defense", "Cyber Security"),
+                ("AI & Agents Path", "Machine learning and algorithms", "AI & Agents"),
+                ("Data Science Path", "Data visualization and analytics", "Data Science")
             ]
             path_ids = {}
             for title, desc, domain_name in paths:
@@ -171,15 +174,26 @@ def safe_migrate():
                     path_id = row[0]
                 path_ids[title] = path_id
 
-            # 4. Milestones & 5. Assignments (with explicit IDs 1-7)
+            # 4. Milestones & 5. Assignments (with explicit IDs 1-8)
             assignments_to_seed = [
-                (1, "Web Fundamentals", "Full Stack Web Development Path", "Create a Portfolio Landing Page", "Design a fully responsive portfolio page using raw HTML & CSS."),
-                (2, "Frontend Frameworks (React)", "Full Stack Web Development Path", "Build an Authentication Flow", "Implement a complete JWT-based login system using React."),
-                (3, "Backend & Databases", "Full Stack Web Development Path", "Database Schema Design", "Design a normalized relational schema for an e-commerce platform."),
-                (4, "HTML/CSS Mastery", "Frontend Engineering Path", "Recreate a Complex UI Dashboard Layout", "Recreate a dashboard mock-up with rich responsive aesthetics."),
-                (5, "UI State & Build Systems", "Frontend Engineering Path", "Build a Multi-Step Wizard Form", "Implement complex multi-page input with validation."),
-                (6, "Server Architectures", "Backend & APIs Path", "Build an API Gateway / Proxy Server", "Develop a high-throughput proxy layer with rate limiting."),
-                (7, "Data Persistence", "Backend & APIs Path", "Optimize Slow SQL Queries", "Optimize slow indices and execution plans on a simulated dataset.")
+                (1, "Web Architecture & Principles", "Full Stack Web Development Path", "Design a Scalable System Architecture", "Create an architecture diagram for a scalable e-commerce platform."),
+                (2, "Frontend & Backend Integration", "Full Stack Web Development Path", "React + FastAPI/Node.js Integration", "Build a frontend that consumes your backend REST API."),
+                (3, "Database & Cloud Deployment", "Full Stack Web Development Path", "Cloud & DB Capstone", "Design schema, dockerize, and deploy."),
+                (4, "Design & User Experience", "Frontend Engineering Path", "Accessible UI Implementation", "Build an accessible, WCAG-compliant form."),
+                (5, "Core Engineering Tools", "Frontend Engineering Path", "TypeScript Integration", "Refactor a JS application to TypeScript."),
+                (6, "Modern UI Development", "Frontend Engineering Path", "Frontend Frameworks Capstone", "Build a highly componentized Next.js/React view."),
+                (7, "Database Architecture", "Backend & APIs Path", "PostgreSQL Modeling", "Create a robust relational schema for an API."),
+                (8, "API Frameworks", "Backend & APIs Path", "FastAPI/Django Implementation", "Build a high-performance REST API."),
+                (9, "Systems at Scale", "Backend & APIs Path", "Docker Orchestration", "Containerize a microservices architecture using Docker."),
+                (10, "Foundations & Cryptography", "Cyber Security Path", "Implement Encryption", "Write scripts to encrypt and decrypt sensitive data."),
+                (11, "Network & Defensive Security", "Cyber Security Path", "Wireshark Packet Analysis", "Analyze network traffic dumps to find anomalies."),
+                (12, "Offensive Security & Tooling", "Cyber Security Path", "Security Assessment Capstone", "Find and exploit vulnerabilities using industry tools."),
+                (13, "Mathematical Foundations", "Data Science Path", "Statistical Inference", "Perform A/B testing analysis on a provided dataset."),
+                (14, "Data Processing & Visualization", "Data Science Path", "Data Wrangling & Analysis", "Clean, aggregate, and visualize a real-world dataset."),
+                (15, "Machine Learning Integration", "Data Science Path", "Model Building with Scikit-learn", "Train and evaluate models for classification tasks."),
+                (16, "AI Mathematics & Fundamentals", "AI & Agents Path", "Python & ML Basics", "Implement ML algorithms and evaluate baselines."),
+                (17, "Deep Learning & NLP", "AI & Agents Path", "Deep Learning with PyTorch", "Build and train a neural network using PyTorch."),
+                (18, "Advanced Agents & Systems", "AI & Agents Path", "Agent Workflows & RAG", "Orchestrate multi-agent tasks and implement document retrieval.")
             ]
 
             for ass_id, ms_title, path_title, ass_title, ass_desc in assignments_to_seed:

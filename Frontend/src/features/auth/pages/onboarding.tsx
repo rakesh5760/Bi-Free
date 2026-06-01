@@ -93,7 +93,8 @@ export default function OnboardingPage() {
         name: `${userData.first_name} ${userData.last_name}`,
         email: userData.email,
         role: mappedRole,
-        studentLevel: userData.student_profile?.level?.name?.replace('Level ', '') || null
+        studentLevel: userData.student_profile?.level?.name?.replace('Level ', '') || null,
+        domain: userData.student_profile?.domain?.name || null
       };
       
       // Authenticate in store BEFORE navigating so ProtectedRoute passes
