@@ -1,8 +1,10 @@
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-from app.models.project import Project, ProjectStatus, Task, TaskStatus, QualityAssuranceSubmission, SubmissionStatus, ProjectAllocation, TeamMember
+from app.models.project import Project, ProjectStatus, Task, TaskStatus, QualityAssuranceSubmission, SubmissionStatus, ProjectAllocation, TeamMember, ProjectProgressHistory
 from app.utils.logger import logger
+from datetime import datetime
+from app.models.user import User
 
 from app.models.profile import ClientProfile
 
@@ -199,4 +201,57 @@ class ProjectService:
         
         logger.info(f"Project {project_id} transitioned to {new_status} by Mentor {mentor_id}")
         
+        return project
+
+    def update_project_progress(self, user: User, project_id: int, progress_code: str, progress_title: str, mentor_note: str) -> Project:
+        """
+        Mentor or Faculty explicitly updates the project progress stage.
+        """
+        if progress_code == "P11" and user.role.name not in ["Faculty", "Admin"]:
+            raise HTTPException(status_code=403, detail="Only Faculty can approve stage P11.")
+
+        project = self.db.query(Project).filter(Project.project_id == project_id).first()
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+            
+        updated_by_profile_id = user.user_id
+
+        if user.role.name == "Mentor":
+            from app.models.profile import MentorProfile
+            mentor = self.db.query(MentorProfile).filter(MentorProfile.user_id == user.user_id).first()
+            if not mentor:
+                raise HTTPException(status_code=403, detail="Not authorized as mentor.")
+            
+            allocation = self.db.query(ProjectAllocation).filter(
+                ProjectAllocation.project_id == project_id,
+                ProjectAllocation.mentor_id == mentor.profile_id
+            ).first()
+            
+            if not allocation:
+                raise HTTPException(status_code=403, detail="Not authorized. Only the assigned mentor can update progress.")
+            
+            updated_by_profile_id = mentor.profile_id
+        elif user.role.name in ["Faculty", "Admin"]:
+            pass # Faculty can approve globally
+        else:
+            raise HTTPException(status_code=403, detail="Not authorized.")
+            
+        # Update project level
+        project.current_progress_level = progress_code
+        project.current_progress_title = progress_title
+        project.last_progress_update = datetime.utcnow()
+        
+        # Create history entry
+        history_entry = ProjectProgressHistory(
+            project_id=project_id,
+            progress_code=progress_code,
+            progress_title=progress_title,
+            mentor_note=mentor_note,
+            updated_by=updated_by_profile_id
+        )
+        self.db.add(history_entry)
+        self.db.commit()
+        self.db.refresh(project)
+        
+        logger.info(f"Project {project_id} progress updated to {progress_code} by User {user.user_id}")
         return project

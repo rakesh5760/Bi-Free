@@ -16,7 +16,8 @@ class MentorService:
         query = self.db.query(Project).options(
             joinedload(Project.tasks),
             joinedload(Project.qa_submissions),
-            joinedload(Project.required_skills)
+            joinedload(Project.required_skills),
+            joinedload(Project.progress_history)
         )
         
         if search:

@@ -182,3 +182,28 @@ def transition_project(
     svc = ProjectService(db)
     proj = svc.mentor_transition_project(current_user.user_id, project_id, request.status)
     return success_response(data=proj, message=f"Project transitioned to {request.status}.")
+
+class UpdateProjectProgressRequest(BaseModel):
+    progress_code: str
+    progress_title: str
+    mentor_note: str
+
+@router.patch("/{project_id}/progress", response_model=StandardResponse[Project])
+def update_project_progress(
+    project_id: int,
+    request: UpdateProjectProgressRequest,
+    current_user: User = Depends(mentor_checker),
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Mentor explicitly updates the project progress stage.
+    """
+    svc = ProjectService(db)
+    proj = svc.update_project_progress(
+        user=current_user,
+        project_id=project_id,
+        progress_code=request.progress_code,
+        progress_title=request.progress_title,
+        mentor_note=request.mentor_note
+    )
+    return success_response(data=proj, message=f"Project progress updated to {request.progress_code}.")

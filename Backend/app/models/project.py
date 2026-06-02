@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Numeric, Date, ForeignKey, Enum, Table
+from sqlalchemy import Column, Integer, String, Text, Numeric, Date, ForeignKey, Enum, Table, DateTime
 from sqlalchemy.orm import relationship
 from app.database.session import Base
 from app.database.mixins import TimestampMixin, SoftDeleteMixin
@@ -48,6 +48,9 @@ class Project(Base, TimestampMixin, SoftDeleteMixin):
     status = Column(Enum(ProjectStatus), default=ProjectStatus.PENDING, index=True)
     deadline = Column(Date)
     revocation_reason = Column(Text, nullable=True)
+    current_progress_level = Column(String(50), default="P0")
+    current_progress_title = Column(String(255), default="Project Allocated")
+    last_progress_update = Column(DateTime, nullable=True)
 
     client = relationship("ClientProfile", back_populates="projects")
     domain = relationship("Domain")
@@ -55,6 +58,7 @@ class Project(Base, TimestampMixin, SoftDeleteMixin):
     allocation = relationship("ProjectAllocation", back_populates="project", uselist=False, cascade="all, delete-orphan")
     tasks = relationship("Task", back_populates="project", cascade="all, delete-orphan")
     qa_submissions = relationship("QualityAssuranceSubmission", back_populates="project", cascade="all, delete-orphan")
+    progress_history = relationship("ProjectProgressHistory", back_populates="project", cascade="all, delete-orphan", order_by="ProjectProgressHistory.updated_at.desc()")
 
 
 class ProjectAllocation(Base, TimestampMixin, SoftDeleteMixin):
@@ -147,3 +151,16 @@ class QualityAssuranceSubmission(Base, TimestampMixin, SoftDeleteMixin):
 
     project = relationship("Project", back_populates="qa_submissions")
     submitted_student = relationship("StudentProfile", back_populates="qa_submissions")
+
+class ProjectProgressHistory(Base, TimestampMixin, SoftDeleteMixin):
+    __tablename__ = "project_progress_history"
+
+    id = Column(Integer, primary_key=True, index=True)
+    project_id = Column(Integer, ForeignKey("projects.project_id", ondelete="CASCADE"), nullable=False, index=True)
+    progress_code = Column(String(50), nullable=False)
+    progress_title = Column(String(255), nullable=False)
+    mentor_note = Column(Text, nullable=False)
+    updated_by = Column(Integer, ForeignKey("mentor_profiles.profile_id"), nullable=False, index=True)
+
+    project = relationship("Project", back_populates="progress_history")
+    mentor = relationship("MentorProfile")

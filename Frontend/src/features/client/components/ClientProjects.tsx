@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
-import { Briefcase, Clock, DollarSign, Users, RefreshCw, AlertCircle, Calendar, XCircle, Mail, Phone, CheckCircle } from "lucide-react";
+import { Briefcase, Clock, DollarSign, Users, RefreshCw, AlertCircle, Calendar, XCircle, Mail, Phone, CheckCircle, CheckCircle2, History } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../components/ui/card";
@@ -12,6 +12,7 @@ import { Textarea } from "../../../components/ui/textarea";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { PlusCircle } from "lucide-react";
+import { ProjectTimeline } from "../../projects/components/ProjectTimeline";
 
 export function ClientProjects() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -292,6 +293,11 @@ export function ClientProjects() {
                     </div>
 
                     <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                      <CheckCircle2 className="h-4 w-4 text-indigo-500" />
+                      <span className="truncate" title={`${project.current_progress_level || "P0"} - ${project.current_progress_title || "Project Allocated"}`}><span className="font-semibold text-indigo-500">{project.current_progress_level || "P0"}</span> - {project.current_progress_title || "Project Allocated"}</span>
+                    </div>
+
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
                       <Users className="h-4 w-4 text-amber-500" />
                       <span><span className="font-semibold text-foreground">{teamName}</span> ({membersCount} members)</span>
                     </div>
@@ -357,6 +363,14 @@ export function ClientProjects() {
           )}
 
           <div className="grid gap-6 py-4">
+            {/* Project Timeline */}
+            <div>
+              <ProjectTimeline 
+                currentLevel={selectedProjectToView?.current_progress_level} 
+                history={selectedProjectToView?.progress_history || []} 
+              />
+            </div>
+
             {/* Mentor Details */}
             <div>
               <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">

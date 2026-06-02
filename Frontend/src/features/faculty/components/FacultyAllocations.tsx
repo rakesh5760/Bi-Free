@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, UserCheck, FileText, CheckCircle, AlertTriangle, Briefcase, Clock, Calendar, Search, UserPlus, RefreshCw, ChevronDown, ChevronUp, CheckSquare, ShieldAlert, DollarSign, X } from "lucide-react";
+import { Users, UserCheck, FileText, CheckCircle, AlertTriangle, Briefcase, Clock, Calendar, Search, UserPlus, RefreshCw, ChevronDown, ChevronUp, CheckSquare, ShieldAlert, DollarSign, X, History } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
@@ -8,8 +8,9 @@ import { Input } from "../../../components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "../../../components/ui/dialog";
 import { Checkbox } from "../../../components/ui/checkbox";
 import { Progress } from "../../../components/ui/progress";
-import { api } from "../../../services/api.client";
+import { api, facultyApi } from "../../../services/api.client";
 import { toast } from "sonner";
+import { ProjectTimeline } from "../../projects/components/ProjectTimeline";
 
 export function FacultyAllocations() {
   const [projects, setProjects] = useState<any[]>([]);
@@ -27,6 +28,25 @@ export function FacultyAllocations() {
   const [currentAllocToModify, setCurrentAllocToModify] = useState<any | null>(null);
   const [selectedStudentsToAdd, setSelectedStudentsToAdd] = useState<number[]>([]);
   const [isSubmittingStudents, setIsSubmittingStudents] = useState(false);
+  const [isApprovingP11, setIsApprovingP11] = useState(false);
+
+  const handleApproveP11 = async (projectId: number) => {
+    if (!confirm("Are you sure you want to approve and mark this project as P11 (Completed)?")) return;
+    setIsApprovingP11(true);
+    try {
+      const res = await facultyApi.approveProjectP11(projectId);
+      if (res.success) {
+        toast.success("Project marked as P11 completed.");
+        fetchAllocations();
+      } else {
+        toast.error(res.message || "Failed to update project progress.");
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || "An error occurred.");
+    } finally {
+      setIsApprovingP11(false);
+    }
+  };
 
   const fetchAllocations = async () => {
     try {
@@ -378,6 +398,26 @@ export function FacultyAllocations() {
                         )}
                       </div>
                     </div>
+                  </div>
+
+                  {/* Progress Lifecycle Tracking */}
+                  <div className="pt-4 border-t border-border/40">
+                    <ProjectTimeline 
+                      currentLevel={project.current_progress_level} 
+                      history={project.progress_history || []} 
+                    />
+                    {project.current_progress_level === "P10" && (
+                      <div className="mt-4 flex justify-end">
+                        <Button 
+                          onClick={() => handleApproveP11(project.project_id)} 
+                          disabled={isApprovingP11}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md hover:shadow-lg transition-all"
+                        >
+                          {isApprovingP11 ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
+                          Approve & Mark as P11 (Completed)
+                        </Button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Task progress bar */}

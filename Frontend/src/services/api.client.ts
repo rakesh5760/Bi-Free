@@ -54,7 +54,17 @@ export const clientApi = {
     return response.data;
   },
   reviewQA: async (submissionId: number, approve: boolean) => {
-    const response = await api.post(`/clients/qa-submissions/${submissionId}/review`, { approve });
+    const response = await api.post(`/projects/qa-submissions/${submissionId}/mentor-review`, { approve });
+    return response.data;
+  },
+  
+  // Progress Tracking (Mentor only)
+  updateProjectProgress: async (projectId: number, progress_code: string, progress_title: string, mentor_note: string) => {
+    const response = await api.patch(`/projects/${projectId}/progress`, {
+      progress_code,
+      progress_title,
+      mentor_note
+    });
     return response.data;
   },
   revokeProject: async (projectId: number, reason: string) => {
@@ -74,6 +84,14 @@ export const facultyApi = {
   },
   overrideStudentProfile: async (userId: number, data: { level_id: number; domain_id: number; reason?: string }) => {
     const response = await api.put(`/faculty/students/${userId}/override`, data);
+    return response.data;
+  },
+  approveProjectP11: async (projectId: number) => {
+    const response = await api.patch(`/projects/${projectId}/progress`, {
+      progress_code: "P11",
+      progress_title: "Project Completed & Closed",
+      mentor_note: "Faculty has officially reviewed and approved the final project deliverables. The project is now complete."
+    });
     return response.data;
   }
 };

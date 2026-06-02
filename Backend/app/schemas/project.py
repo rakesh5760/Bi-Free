@@ -57,6 +57,9 @@ class ProjectBase(BaseModel):
     status: ProjectStatus = ProjectStatus.PENDING
     deadline: Optional[date] = None
     revocation_reason: Optional[str] = None
+    current_progress_level: Optional[str] = "P0"
+    current_progress_title: Optional[str] = "Project Allocated"
+    last_progress_update: Optional[datetime] = None
 
 class ProjectCreate(ProjectBase):
     client_id: Optional[int] = None
@@ -65,6 +68,23 @@ class ProjectCreate(ProjectBase):
 
 class ProjectRevokeRequest(BaseModel):
     reason: str
+
+class ProjectProgressHistoryBase(BaseModel):
+    progress_code: str
+    progress_title: str
+    mentor_note: str
+
+class ProjectProgressHistoryCreate(ProjectProgressHistoryBase):
+    pass
+
+class ProjectProgressHistory(ProjectProgressHistoryBase):
+    id: int
+    project_id: int
+    updated_by: int
+    created_at: datetime
+    updated_at: datetime
+    class Config:
+        from_attributes = True
 
 class Project(ProjectBase):
     project_id: int
@@ -76,6 +96,7 @@ class Project(ProjectBase):
     tasks: List[Task] = []
     allocation: Optional["ProjectAllocation"] = None
     qa_submissions: List["QualityAssuranceSubmission"] = []
+    progress_history: List[ProjectProgressHistory] = []
     class Config:
         from_attributes = True
 

@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { Plus, MessageSquare, Paperclip, GitPullRequest, GitMerge, CheckCircle, Clock, CircleDot, AlertCircle, Play, Edit2, Trash2 } from "lucide-react";
+import { Plus, MessageSquare, Paperclip, GitPullRequest, GitMerge, CheckCircle, Clock, CircleDot, AlertCircle, Play, Edit2, Trash2, Check, CheckCircle2, History } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Avatar, AvatarFallback } from "../../components/ui/avatar";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "../../components/ui/dialog";
+import { Label } from "../../components/ui/label";
+import { Textarea } from "../../components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../components/ui/tooltip";
 import { DashboardLayout } from "../../layouts/DashboardLayout";
 import { StudentSidebar } from "../student-dashboard/components/StudentSidebar";
@@ -16,6 +18,8 @@ import { api } from "../../services/api.client";
 import { useEffect } from "react";
 import { useAuthStore } from "../../store/useAuthStore";
 import { useSearchParams } from "react-router";
+import { PROJECT_STAGES, getStageIndex } from "./lib/ProjectProgressTracking";
+import { ProjectTimeline } from "./components/ProjectTimeline";
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -43,6 +47,11 @@ export default function ProjectManagement() {
   const [showRevoked, setShowRevoked] = useState(false);
   const [searchParams] = useSearchParams();
   const queryProjectId = searchParams.get('id');
+
+  const [updateProgressModalOpen, setUpdateProgressModalOpen] = useState(false);
+  const [newProgressCode, setNewProgressCode] = useState("P0");
+  const [newProgressNote, setNewProgressNote] = useState("");
+  const [isUpdatingProgress, setIsUpdatingProgress] = useState(false);
 
   const displayProjects = projects.filter(p => showRevoked ? p.status === "Revoked" : p.status !== "Revoked");
 
@@ -110,6 +119,27 @@ export default function ProjectManagement() {
       if (selectedProjectId) fetchProjectDetails(selectedProjectId);
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleUpdateProgress = async () => {
+    if (!selectedProjectId || !newProgressNote.trim()) return;
+    setIsUpdatingProgress(true);
+    try {
+      const stage = PROJECT_STAGES.find(s => s.code === newProgressCode);
+      if (!stage) return;
+      await api.patch(`/projects/${selectedProjectId}/progress`, {
+        progress_code: stage.code,
+        progress_title: stage.title,
+        mentor_note: newProgressNote
+      });
+      setUpdateProgressModalOpen(false);
+      setNewProgressNote("");
+      fetchProjectDetails(selectedProjectId);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsUpdatingProgress(false);
     }
   };
 
@@ -275,6 +305,32 @@ export default function ProjectManagement() {
             )}
           </div>
         </motion.div>
+
+        {/* Project Progress Timeline */}
+        {projectDetails && (
+          <motion.div variants={fadeIn} className="bg-card/50 backdrop-blur-sm p-6 rounded-xl border border-border/50 shadow-sm overflow-hidden">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h3 className="text-lg font-bold flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-emerald-500" /> Project Lifecycle Timeline</h3>
+                <p className="text-sm text-muted-foreground mt-1">Track milestone progress for this project.</p>
+              </div>
+              {user?.role === 'mentor' && projectDetails.status !== "Completed" && projectDetails.status !== "Revoked" && (
+                <Button onClick={() => {
+                  setNewProgressCode(projectDetails.current_progress_level || "P0");
+                  setNewProgressNote("");
+                  setUpdateProgressModalOpen(true);
+                }} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-md shadow-indigo-500/20">
+                  Update Progress
+                </Button>
+              )}
+            </div>
+
+            <ProjectTimeline 
+              currentLevel={projectDetails.current_progress_level} 
+              history={projectDetails.progress_history || []} 
+            />
+          </motion.div>
+        )}
 
         {/* Kanban Board */}
         <motion.div variants={fadeIn} className="flex gap-6 overflow-x-auto pb-4 custom-scrollbar">
@@ -455,6 +511,54 @@ export default function ProjectManagement() {
           }} 
         />
       )}
+
+      {/* Update Progress Modal */}
+      <Dialog open={updateProgressModalOpen} onOpenChange={setUpdateProgressModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Update Project Progress</DialogTitle>
+            <DialogDescription>
+              Advance the project lifecycle stage. Provide a descriptive update note for students, faculty, and the client.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>New Stage <span className="text-red-500">*</span></Label>
+              <select 
+                className="w-full flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                value={newProgressCode}
+                onChange={e => setNewProgressCode(e.target.value)}
+              >
+                {PROJECT_STAGES.map((stage, idx) => {
+                  const currentIdx = getStageIndex(projectDetails?.current_progress_level || "P0");
+                  return (
+                    <option key={stage.code} value={stage.code} disabled={idx < currentIdx}>
+                      {stage.code} - {stage.title}
+                    </option>
+                  );
+                })}
+              </select>
+              <p className="text-xs text-muted-foreground">{PROJECT_STAGES.find(s => s.code === newProgressCode)?.description}</p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Mandatory Update Note <span className="text-red-500">*</span></Label>
+              <Textarea 
+                placeholder="E.g., Backend APIs completed successfully. Frontend integration currently in progress..."
+                value={newProgressNote}
+                onChange={e => setNewProgressNote(e.target.value)}
+                className="min-h-[120px]"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setUpdateProgressModalOpen(false)} disabled={isUpdatingProgress}>Cancel</Button>
+            <Button onClick={handleUpdateProgress} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold" disabled={!newProgressNote.trim() || isUpdatingProgress}>
+              {isUpdatingProgress ? "Saving..." : "Save Progress Update"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

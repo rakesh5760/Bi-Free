@@ -56,7 +56,8 @@ class ClientService:
         query = self.db.query(Project).options(
             joinedload(Project.tasks),
             joinedload(Project.allocation).joinedload(ProjectAllocation.team_members),
-            joinedload(Project.qa_submissions)
+            joinedload(Project.qa_submissions),
+            joinedload(Project.progress_history)
         ).filter(Project.client_id == client_profile.profile_id)
         
         if search:
