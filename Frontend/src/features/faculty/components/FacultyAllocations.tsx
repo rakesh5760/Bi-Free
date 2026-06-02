@@ -28,25 +28,6 @@ export function FacultyAllocations() {
   const [currentAllocToModify, setCurrentAllocToModify] = useState<any | null>(null);
   const [selectedStudentsToAdd, setSelectedStudentsToAdd] = useState<number[]>([]);
   const [isSubmittingStudents, setIsSubmittingStudents] = useState(false);
-  const [isApprovingP11, setIsApprovingP11] = useState(false);
-
-  const handleApproveP11 = async (projectId: number) => {
-    if (!confirm("Are you sure you want to approve and mark this project as P11 (Completed)?")) return;
-    setIsApprovingP11(true);
-    try {
-      const res = await facultyApi.approveProjectP11(projectId);
-      if (res.success) {
-        toast.success("Project marked as P11 completed.");
-        fetchAllocations();
-      } else {
-        toast.error(res.message || "Failed to update project progress.");
-      }
-    } catch (err: any) {
-      toast.error(err.response?.data?.detail || "An error occurred.");
-    } finally {
-      setIsApprovingP11(false);
-    }
-  };
 
   const fetchAllocations = async () => {
     try {
@@ -267,10 +248,10 @@ export function FacultyAllocations() {
           </Card>
         ) : (
           filteredAllocations.map(project => {
-            const teamSize = project.allocation.team_members?.length || 0;
-            const mentorName = project.allocation.mentor_name || "Unassigned";
-            const mentorEmail = project.allocation.mentor_email || "NIL";
-            const mentorPhone = project.allocation.mentor_phone || "NIL";
+            const teamSize = project.allocation?.team_members?.length || 0;
+            const mentorName = project.allocation?.mentor_name || "Unassigned";
+            const mentorEmail = project.allocation?.mentor_email || "NIL";
+            const mentorPhone = project.allocation?.mentor_phone || "NIL";
             const tasks = project.tasks || [];
             const completedTasks = tasks.filter((t: any) => t.status === "Done").length;
             const totalTasks = tasks.length;
@@ -280,7 +261,7 @@ export function FacultyAllocations() {
             // Get eligible students who aren't already on this team and whose skills match this domain
             const eligibleStudents = levelAStudents.filter(student =>
               student.skills?.some((s: any) => s.domain_id === project.domain?.domain_id) &&
-              !project.allocation.team_members?.some((m: any) => m.student_id === student.profile_id)
+              !project.allocation?.team_members?.some((m: any) => m.student_id === student.profile_id)
             );
 
             return (
@@ -373,7 +354,7 @@ export function FacultyAllocations() {
                             No students allocated to this project yet.
                           </div>
                         ) : (
-                          project.allocation.team_members.map((tm: any, idx: number) => (
+                          project.allocation?.team_members?.map((tm: any, idx: number) => (
                             <div key={idx} className="flex justify-between items-center p-3 border border-border/40 rounded-xl bg-background/50 text-xs gap-3">
                               <div>
                                 <div className="font-bold text-foreground">{tm.student_name}</div>
@@ -385,7 +366,7 @@ export function FacultyAllocations() {
                                   <Button
                                     size="icon"
                                     variant="ghost"
-                                    onClick={() => handleRemoveStudent(project.allocation.allocation_id, tm.student_id)}
+                                    onClick={() => handleRemoveStudent(project.allocation?.allocation_id, tm.student_id)}
                                     className="h-7 w-7 text-red-500 hover:bg-red-500/10 hover:text-red-600 rounded-lg"
                                     title="Remove student from team"
                                   >
@@ -405,19 +386,8 @@ export function FacultyAllocations() {
                     <ProjectTimeline 
                       currentLevel={project.current_progress_level} 
                       history={project.progress_history || []} 
+                      layout="vertical"
                     />
-                    {project.current_progress_level === "P10" && (
-                      <div className="mt-4 flex justify-end">
-                        <Button 
-                          onClick={() => handleApproveP11(project.project_id)} 
-                          disabled={isApprovingP11}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md hover:shadow-lg transition-all"
-                        >
-                          {isApprovingP11 ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
-                          Approve & Mark as P11 (Completed)
-                        </Button>
-                      </div>
-                    )}
                   </div>
 
                   {/* Task progress bar */}

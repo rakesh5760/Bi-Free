@@ -368,6 +368,7 @@ export function ClientProjects() {
               <ProjectTimeline 
                 currentLevel={selectedProjectToView?.current_progress_level} 
                 history={selectedProjectToView?.progress_history || []} 
+                layout="vertical"
               />
             </div>
 

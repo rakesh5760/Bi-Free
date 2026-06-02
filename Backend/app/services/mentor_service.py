@@ -17,7 +17,8 @@ class MentorService:
             joinedload(Project.tasks),
             joinedload(Project.qa_submissions),
             joinedload(Project.required_skills),
-            joinedload(Project.progress_history)
+            joinedload(Project.progress_history),
+            joinedload(Project.allocation).joinedload(ProjectAllocation.team_members)
         )
         
         if search:

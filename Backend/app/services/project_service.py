@@ -232,7 +232,12 @@ class ProjectService:
             
             updated_by_profile_id = mentor.profile_id
         elif user.role.name in ["Faculty", "Admin"]:
-            pass # Faculty can approve globally
+            # Faculty doesn't have a mentor profile, so to satisfy the FK constraint on ProjectProgressHistory,
+            # we attribute the history entry to the project's assigned mentor.
+            allocation = self.db.query(ProjectAllocation).filter(ProjectAllocation.project_id == project_id).first()
+            if not allocation or not allocation.mentor_id:
+                raise HTTPException(status_code=400, detail="Cannot approve project: No mentor assigned to project.")
+            updated_by_profile_id = allocation.mentor_id
         else:
             raise HTTPException(status_code=403, detail="Not authorized.")
             
@@ -240,6 +245,9 @@ class ProjectService:
         project.current_progress_level = progress_code
         project.current_progress_title = progress_title
         project.last_progress_update = datetime.utcnow()
+        
+        if progress_code == "P11":
+            project.status = ProjectStatus.COMPLETED
         
         # Create history entry
         history_entry = ProjectProgressHistory(

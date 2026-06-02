@@ -5,6 +5,7 @@ import { FacultyOverview } from "./components/FacultyOverview";
 import { FacultyStudentManagement } from "./components/FacultyStudentManagement";
 import { FacultyMentorDirectory } from "./components/FacultyMentorDirectory";
 import { FacultyAllocations } from "./components/FacultyAllocations";
+import { FacultyApprovals } from "./components/FacultyApprovals";
 import { FacultySettings } from "./components/FacultySettings";
 import { PlaceholderPage } from "../../components/PlaceholderPage";
 
@@ -25,6 +26,10 @@ export default function FacultyDashboard() {
         <Route 
           path="allocations" 
           element={<FacultyAllocations />} 
+        />
+        <Route 
+          path="approvals" 
+          element={<FacultyApprovals />} 
         />
         <Route 
           path="settings" 
