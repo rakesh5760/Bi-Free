@@ -31,7 +31,7 @@ const slideIn = {
   visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease: "easeOut" as const } }
 };
 
-import { DOMAINS, Domain } from "./mockData";
+import { DOMAINS, Domain, Module } from "./mockData";
 
 /* ─── helper ─────────────────────────────────────────────── */
 function getDomainProgress(domain: Domain, completedModules: string[]) {
