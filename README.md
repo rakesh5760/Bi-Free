@@ -6,7 +6,7 @@ A modern, enterprise-level EdTech platform that connects students, mentors, facu
 
 SkillForge is a comprehensive skill incubation platform designed to help students transition from learning to industry-ready professionals through structured mentorship, monitored assessments, and real-world project experience. The platform supports distinct user roles (Clients, Students, Mentors, Faculty/Admin) and provides specialized dashboards for each.
 
-## ✨ Key Features
+## ✨ Key Features:
 
 - **Multi-Role Ecosystem**: Separate interfaces and workflows for Students, Mentors, Faculty/Staff, and Clients.
 - **Skill Level Progression System**: Progressive certification paths (Level A, B, C, D). Achieving an "A grade" unlocks real-world freelance projects.
@@ -15,7 +15,7 @@ SkillForge is a comprehensive skill incubation platform designed to help student
 - **Real-World Projects**: Students work on actual client deliverables under senior mentor supervision.
 - **Analytics & Management**: Comprehensive Kanban boards, tracking, metrics, and administrative controls.
 
-## 🛠️ Technology Stack
+## 🛠️ Technology Stack:
 
 **Backend**:
 - **Framework**: FastAPI (Python)
